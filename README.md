@@ -1,16 +1,21 @@
 # TurboRNNDecoder
-Documentation for RNN Turbo Decoder
+RNN Turbo Decoder
 Author: Yihan Jiang, UW & Hyeji Kim, UIUC.
 
-We have a few scripts for user.
+We have a few scripts for user:
+
 (1) evaluate_performance.py is a command line tool for evaluating Turbo RNN Decoder's BER curve.
+
 (2) train_turbo_decoder_end2end.py is a command line tool for training Turbo Decoder with different noise.
+
 (3) train_bcjr_rnn.py is a command line tool for training BCJR-like RNN
-(4) interpretibility.py
 
+(4) TBD: interpretibility.py
 
-(4) TBD: Support User Defined Codec
-(5) TBD: User Defined Channel, or let user override channel easily. 
+(*) TBD: Support User Defined Codec
+
+(*) TBD: User Defined Channel, or let user override channel easily.
+ 
 
 Dependency:
 (0) Python (2.7.10+)
