@@ -20,7 +20,7 @@ if __name__ == '__main__':
     n_inp = sys.argv[1:]
 
     if '--help' in n_inp:
-        with open('manual.md','r') as fin:
+        with open('evaluate_performance.md','r') as fin:
             print fin.read()
         exit_now = True
         sys.exit()
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     num_hidden_unit = 200
     start_time = time.time()
 
-    model = load_model(network_saved_path = model_path, interleave_array = p_array, dec_iter_num = dec_iter_num)
+    model = load_model(network_saved_path = model_path, block_len=block_len, interleave_array = p_array, dec_iter_num = dec_iter_num)
     end_time = time.time()
     print '[RNN decoder]loading RNN model takes ', str(end_time-start_time), ' secs'   # typically longer than 5 mins, since it is deep!
 
