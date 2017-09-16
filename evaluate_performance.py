@@ -110,18 +110,32 @@ if __name__ == '__main__':
 
     print '[Setting Parameters] Network Saved Path is ', model_path
 
+    if '-codec_type' in n_inp:
+        ind1      = n_inp.index('-codec_type')
+        codec_type = str(n_inp[ind1+1])
+    else:
+        codec_type = 'default'
+
+    print '[Setting Parameters]Codec type is ', codec_type
 
     ##########################################
     # Setting Up Codec
     ##########################################
-    M = np.array([2]) # Number of delay elements in the convolutional encoder
-    generator_matrix = np.array([[7, 5]])
-    feedback = 7
+    if codec_type == 'lte':
+        M = np.array([3]) # Number of delay elements in the convolutional encoder
+        generator_matrix = np.array([[11,13]])
+        feedback = 11
+    else:     #'defalut'
+        M = np.array([2]) # Number of delay elements in the convolutional encoder
+        generator_matrix = np.array([[7, 5]])
+        feedback = 7
+
     trellis1 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
     trellis2 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
     interleaver = RandInterlv.RandInterlv(block_len, 0)
     p_array = interleaver.p_array
-    print '[Turbo Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
+    print '[BCJR Example Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
+    codec  = [trellis1, trellis2, interleaver]
 
     ##########################################
     # Setting Up RNN Model
@@ -151,8 +165,6 @@ if __name__ == '__main__':
     test_sigmas = np.linspace(sigma_start, sigma_stop, SNR_points, dtype = 'float32')
     SNRS = -10*np.log10(test_sigmas**2)
     print '[testing] SNR range in dB ', SNRS
-
-    codec  = [trellis1, trellis2, interleaver]
 
     turbo_res_ber = []
     turbo_res_bler= []
