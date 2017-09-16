@@ -1,8 +1,6 @@
 __author__ = 'yihanjiang'
 import time
 import numpy as np
-
-
 import commpy.channelcoding.turbo as turbo
 from utils import generate_noise, snr_db2sigma
 

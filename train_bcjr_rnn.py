@@ -109,32 +109,65 @@ if __name__ == '__main__':
 
     print '[BCJR Setting Parameters] Training num_epoch is ', num_epoch
 
-    if '--generate_example' in n_inp:
-        ind1      = n_inp.index('--generate_example')
-        generate_example = False
+    if '-num_iteration' in n_inp:
+        ind1      = n_inp.index('-num_iteration')
+        num_iteration = int(n_inp[ind1+1])
     else:
+        num_iteration = 6
+
+    print '[BCJR Setting Parameters] Turbo Decoding Iteration ', num_iteration
+
+    import commpy.channelcoding.interleavers as RandInterlv
+    import commpy.channelcoding.convcode as cc
+
+    if '-codec_type' in n_inp:
+        ind1           = n_inp.index('-codec_type')
+        codec_type = str(n_inp[ind1+1])
+    else:
+        codec_type = 'default'
+    print '[BCJR Setting Parameters] Codec type is ', codec_type
+
+    if '--generate_example' in n_inp:
         generate_example = True
+    else:
+        generate_example = False
 
     print '[BCJR Setting Parameters] Is Generating Example ', generate_example
 
-    if generate_example:
+    if generate_example == False:
         if '-train_example_path' in n_inp:
             ind1      = n_inp.index('-train_example_path')
             train_example_path = str(ind1)
         else:
-            train_example_path = './tmp/bcjr_trEX_0.992598517861_SNRidx_0.0_BL_100_BN_6.pickle'
+            train_example_path = './tmp/train_example_0915.pickle'
 
         if '-test_example_path' in n_inp:
             ind1      = n_inp.index('-test_example_path')
             test_example_path = str(ind1)
         else:
-            test_example_path = './tmp/bcjr_trEX_0.0652930157132_SNRidx_0.0_BL_100_BN_6.pickle'
+            test_example_path = './tmp/test_example_0915.pickle'
 
         with open(train_example_path) as f:
             bcjr_outputs_train, bcjr_inputs_train, num_iteration_train, block_len = pickle.load(f)
 
         with open(test_example_path) as f:
             bcjr_outputs_test,  bcjr_inputs_test,  num_iteration_test,  block_len= pickle.load(f)
+
+        if codec_type == 'lte':
+            M = np.array([3]) # Number of delay elements in the convolutional encoder
+            generator_matrix = np.array([[11,13]])
+            feedback = 11
+        else:     #'defalut'
+            M = np.array([2]) # Number of delay elements in the convolutional encoder
+            generator_matrix = np.array([[7, 5]])
+            feedback = 7
+
+        trellis1 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
+        trellis2 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
+        interleaver = RandInterlv.RandInterlv(block_len, 0)
+        p_array = interleaver.p_array
+        print '[BCJR Example Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
+        codec  = [trellis1, trellis2, interleaver]
 
     else:
         if '-train_snr' in n_inp:
@@ -156,36 +189,39 @@ if __name__ == '__main__':
             ind1            = n_inp.index('-num_block_train')
             num_block_train = int(n_inp[ind1+1])
         else:
-            num_block_train = 100
+            num_block_train = 10000
 
         if '-num_block_test' in n_inp:
             ind1           = n_inp.index('-num_block_test')
             num_block_test = int(n_inp[ind1+1])
         else:
-            num_block_test = 10
+            num_block_test = 100
 
         print '[BCJR Setting Parameters] Number of Train Block is ', num_block_train, ' Test Block ', num_block_test
 
-        import commpy.channelcoding.interleavers as RandInterlv
-        import commpy.channelcoding.convcode as cc
+        if codec_type == 'lte':
+            M = np.array([3]) # Number of delay elements in the convolutional encoder
+            generator_matrix = np.array([[11,13]])
+            feedback = 11
+        else:     #'defalut'
+            M = np.array([2]) # Number of delay elements in the convolutional encoder
+            generator_matrix = np.array([[7, 5]])
+            feedback = 7
 
-        M = np.array([2]) # Number of delay elements in the convolutional encoder
-        generator_matrix = np.array([[7, 5]])
-        feedback = 7
         trellis1 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
         trellis2 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
-        interleaver = RandInterlv.RandInterlv(100, 0)
+        interleaver = RandInterlv.RandInterlv(block_len, 0)
         p_array = interleaver.p_array
         print '[BCJR Example Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
         codec  = [trellis1, trellis2, interleaver]
 
-        bcjr_outputs_train, bcjr_inputs_train = generate_bcjr_example(num_block_train, block_len,
+        bcjr_inputs_train, bcjr_outputs_train = generate_bcjr_example(num_block_train, block_len,
                                                                       codec, is_save = True,num_iteration = 6,
-                                                                      train_snr_db = 0.0, save_path = './tmp/')
+                                                                      train_snr_db = train_snr, save_path = './tmp/')
 
-        bcjr_outputs_test,  bcjr_inputs_test  = generate_bcjr_example(num_block_test, block_len,
+        bcjr_inputs_test,  bcjr_outputs_test  = generate_bcjr_example(num_block_test, block_len,
                                                                       codec, is_save = True, num_iteration = 6,
-                                                                      train_snr_db = 0.0, save_path = './tmp/')
+                                                                      train_snr_db = train_snr, save_path = './tmp/')
 
     if '-rnn_direction' in n_inp:
         ind1            = n_inp.index('-rnn_direction')
@@ -291,7 +327,7 @@ if __name__ == '__main__':
     print bcjr_inputs_train.shape
     print bcjr_outputs_train.shape
 
-    bcjr_inputs_train = bcjr_inputs_train.reshape((-1, block_len, input_feature_num))
+    bcjr_inputs_train   = bcjr_inputs_train.reshape((-1, block_len, input_feature_num))
     bcjr_outputs_train  = bcjr_outputs_train.reshape((-1,  block_len, 1))
 
     print bcjr_inputs_train.shape
@@ -306,8 +342,8 @@ if __name__ == '__main__':
 
     target_train_select[:,:] = math.e**target_train_select[:,:]*1.0/(1+math.e**target_train_select[:,:])
 
-    X_input  = bcjr_inputs_train.reshape(-1,block_len,3)[:40000,:,:]
-    X_target = target_train_select.reshape(-1,block_len,1)[:40000,:,:]
+    X_input  = bcjr_inputs_train.reshape(-1,block_len,3)
+    X_target = target_train_select.reshape(-1,block_len,1)
 
     #X_target[:,:] = math.e**X_target[:,:]*1.0/(1+math.e**X_target[:,:])
 
@@ -315,12 +351,22 @@ if __name__ == '__main__':
     print X_target.shape
 
     ###########################
-    # Start training!
+    # Saving Logs to positions
     ###########################
-
     identity = str(np.random.random())
+    with open('./tmp/log_'+identity+'.txt','w') as f:
+        f.write('*'*100)
+        f.write('* model for '+identity)
+        f.write('*'*100)
+        f.write('Hello World')
+        f.close()
 
-    model.load_weights(starting_model_path)
+    print '[BCJR] Model Log saved in ', './tmp/log_'+identity+'.txt'
+
+    ###########################
+    # Start Training
+    ###########################
+    #model.load_weights(starting_model_path)
 
     model.fit(x=X_input, y=X_target, batch_size=train_batch_size,
               epochs=num_epoch, validation_split = 0.1)#validation_data=(test_tx, X_test))  # starts training

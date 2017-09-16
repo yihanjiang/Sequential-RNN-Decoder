@@ -126,7 +126,8 @@ class Interleave(Layer):
         return masks[1]
 
 
-def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_saved_path='default', learning_rate = 0.001, **kwargs):
+def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_saved_path='default',
+               learning_rate = 0.001, num_hidden_unit = 200, **kwargs):
     '''
     #network_saved_path = './best_bcjr.h5'
     #network_saved_path = './tmp/yihan_lstm0.243249529809.h5'  # deep prior learning
@@ -148,10 +149,7 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     ######################################
     # Encode Turbo Code
     ######################################
-    #block_len     = 1000
     batch_size    = 32
-
-    num_hidden_unit = 200
 
     print '[RNN Model] Block length', block_len
     print '[RNN Model] Evaluate Batch size', batch_size

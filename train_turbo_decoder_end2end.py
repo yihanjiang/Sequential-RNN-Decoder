@@ -148,18 +148,33 @@ if __name__ == '__main__':
 
     print '[Setting Parameters]Training num_epoch is ', num_epoch
 
+    if '-codec_type' in n_inp:
+        ind1      = n_inp.index('-codec_type')
+        codec_type = str(n_inp[ind1+1])
+    else:
+        codec_type = 'default'
+
+    print '[Setting Parameters]Codec type is ', codec_type
+
 
     ##########################################
     # Setting Up Codec
     ##########################################
-    M = np.array([2]) # Number of delay elements in the convolutional encoder
-    generator_matrix = np.array([[7, 5]])
-    feedback = 7
+    if codec_type == 'lte':
+        M = np.array([3]) # Number of delay elements in the convolutional encoder
+        generator_matrix = np.array([[11,13]])
+        feedback = 11
+    else:     #'defalut'
+        M = np.array([2]) # Number of delay elements in the convolutional encoder
+        generator_matrix = np.array([[7, 5]])
+        feedback = 7
+
     trellis1 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
     trellis2 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
     interleaver = RandInterlv.RandInterlv(block_len, 0)
     p_array = interleaver.p_array
-    print '[Turbo Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
+    print '[BCJR Example Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
+    codec  = [trellis1, trellis2, interleaver]
 
     ##########################################
     # Setting Up RNN Model
@@ -185,7 +200,6 @@ if __name__ == '__main__':
     sigma_snr  = np.sqrt(1/(2*10**(float(train_snr_Es)/float(10))))
     SNR = -10*np.log10(sigma_snr**2)
 
-    codec  = [trellis1, trellis2, interleaver]
     noiser = [noise_type, sigma_snr, vv, radar_power, radar_prob]
     start_time = time.time()
 

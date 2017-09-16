@@ -10,6 +10,7 @@ import numpy as np
 import math
 import commpy.channelcoding.turbo as turbo
 
+from scipy import stats
 #######################################
 # Interleaving Helper Functions
 #######################################
@@ -31,6 +32,52 @@ def direct_subtract(in1,in2):
 #######################################
 # Noise Helper Function
 #######################################
+
+def _generate_noise(input_signal, noise_type, sigma = 2.0, vv =5.0, radar_power = 20.0, radar_prob = 5e-2):
+    '''
+    Documentation TBD.
+    :param noise_type: required, choose from 'awgn', 't-dist'
+    :param sigma:
+    :param data_shape:
+    :param vv: parameter for t-distribution.
+    :param radar_power:
+    :param radar_prob:
+    :return:
+    '''
+
+    data_shape = input_signal.shape  # input_signal has to be a numpy array.
+
+    if noise_type == 'awgn':
+        noise = sigma * np.random.standard_normal(data_shape) # Define noise
+        corrupt_signal = input_signal + noise
+
+    elif noise_type == 't-dist':
+        noise = sigma * math.sqrt((vv-2)/vv) *np.random.standard_t(vv, size = data_shape)
+        corrupt_signal = input_signal + noise
+
+    elif noise_type == 'awgn+radar':
+        noise = sigma * np.random.standard_normal(data_shape) + \
+                np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
+        corrupt_signal = input_signal + noise
+
+    elif noise_type == 'radar':
+        noise = np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
+        corrupt_signal = input_signal + noise
+
+    elif noise_type == 'awgn+radar+denoise':
+        noise = np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
+        corrupt_signal = input_signal + noise
+
+        denoise_thd = 10
+        corrupt_signal  = stats.threshold(corrupt_signal, threshmin=-denoise_thd, threshmax=denoise_thd, newval=0.0)
+
+    else:
+        noise = sigma * np.random.standard_normal(data_shape)
+        corrupt_signal = input_signal + noise
+
+
+    return corrupt_signal
+
 def generate_noise(noise_type, sigma, data_shape, vv =5.0, radar_power = 20.0, radar_prob = 5e-2):
     '''
     Documentation TBD.
