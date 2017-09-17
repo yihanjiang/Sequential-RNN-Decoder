@@ -230,13 +230,6 @@ if __name__ == '__main__':
         rnn_direction = 'bd'
     print '[BCJR Setting Parameters] RNN Direction is ', rnn_direction
 
-    if '-rnn_direction' in n_inp:
-        ind1            = n_inp.index('-rnn_direction')
-        rnn_direction = str(n_inp[ind1+1])
-    else:
-        rnn_direction = 'bd'
-    print '[BCJR Setting Parameters] RNN Direction is ', rnn_direction
-
     if '-rnn_type' in n_inp:
         ind1            = n_inp.index('-rnn_type')
         rnn_type = str(n_inp[ind1+1])
@@ -355,9 +348,9 @@ if __name__ == '__main__':
     ###########################
     identity = str(np.random.random())
     with open('./tmp/log_'+identity+'.txt','w') as f:
-        f.write('*'*100)
-        f.write('* model for '+identity)
-        f.write('*'*100)
+        f.write('*'*100+'\n')
+        f.write('* model for '+identity+'\n')
+        f.write('*'*100+'\n')
         f.write('Hello World')
         f.close()
 
@@ -371,11 +364,12 @@ if __name__ == '__main__':
     model.fit(x=X_input, y=X_target, batch_size=train_batch_size,
               epochs=num_epoch, validation_split = 0.1)#validation_data=(test_tx, X_test))  # starts training
 
-    model.save_weights('./tmp/bcjr_train100_truePostLL_'+identity+'_1.h5')
-    print '[BCJR] Saved Model at', './bcjr_train100_truePostLL_'+identity+'_1.h5'
+    model_des = codec_type +'_'+ num_hunit_rnn+'_' + rnn_type+'_' + rnn_direction+'_' +block_len
+    model.save_weights('./tmp/bcjr_train'+model_des+identity+'_1.h5')
+    print '[BCJR] Saved Model at', './tmp/bcjr_train'+model_des+identity+'_1.h5'
 
     model.fit(x=X_input, y=X_target, batch_size=train_batch_size,
               epochs=num_epoch, validation_split = 0.1)#validation_data=(test_tx, X_test))  # starts training
 
-    model.save_weights('./tmp/bcjr_train100_truePostLL_'+identity+'_2.h5')
-    print '[BCJR] Saved Model at', './bcjr_train100_truePostLL_'+identity+'_2.h5'
+    model.save_weights('./tmp/bcjr_train'+model_des+identity+'_1.h5')
+    print '[BCJR] Saved Model at', './tmp/bcjr_train'+model_des+identity+'_2.h5'

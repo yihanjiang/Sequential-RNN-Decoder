@@ -2,7 +2,7 @@ __author__ = 'yihanjiang'
 import time
 import numpy as np
 import commpy.channelcoding.turbo as turbo
-from utils import generate_noise, snr_db2sigma
+from utils import corrupt_signal, snr_db2sigma
 
 def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = True, train_snr_db = 0.0, save_path = './tmp/',
                           **kwargs ):
@@ -36,12 +36,16 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
         message_bits = np.random.randint(0, 2, block_len)
         [sys, par1, par2] = turbo.turbo_encode(message_bits, trellis1, trellis2, interleaver)
 
-        noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = sys.shape)
-        sys_r = (2.0*sys-1) + noise # Modulation plus noise
-        noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par1.shape)
-        par1_r = (2.0*par1-1) + noise # Modulation plus noise
-        noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par2.shape)
-        par2_r = (2.0*par2-1) + noise # Modulation plus noise
+        sys_r  = corrupt_signal(sys, noise_type =noise_type, sigma = noise_sigma,)
+        par1_r = corrupt_signal(par1, noise_type =noise_type, sigma = noise_sigma)
+        par2_r = corrupt_signal(par2, noise_type =noise_type, sigma = noise_sigma)
+
+        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = sys.shape)
+        # sys_r = (2.0*sys-1) + noise # Modulation plus noise
+        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par1.shape)
+        # par1_r = (2.0*par1-1) + noise # Modulation plus noise
+        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par2.shape)
+        # par2_r = (2.0*par2-1) + noise # Modulation plus noise
 
         # Use the Commpy BCJR decoding algorithm
         sys_symbols = sys_r
