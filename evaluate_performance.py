@@ -118,6 +118,16 @@ if __name__ == '__main__':
 
     print '[Setting Parameters]Codec type is ', codec_type
 
+    if '-num_hidden_unit' in n_inp:
+        ind1      = n_inp.index('-num_hidden_unit')
+        num_hidden_unit = int(n_inp[ind1+1])
+    else:
+        num_hidden_unit = 200
+
+    print '[Setting Parameters]RNN Number of hidden unit ', num_hidden_unit
+
+
+
     ##########################################
     # Setting Up Codec
     ##########################################
@@ -141,10 +151,10 @@ if __name__ == '__main__':
     # Setting Up RNN Model
     ##########################################
 
-    num_hidden_unit = 200
     start_time = time.time()
 
-    model = load_model(network_saved_path = model_path, block_len=block_len, interleave_array = p_array, dec_iter_num = dec_iter_num)
+    model = load_model(network_saved_path = model_path, block_len=block_len,
+                       interleave_array = p_array, dec_iter_num = dec_iter_num, num_hidden_unit=num_hidden_unit)
     end_time = time.time()
     print '[RNN decoder]loading RNN model takes ', str(end_time-start_time), ' secs'   # typically longer than 5 mins, since it is deep!
 

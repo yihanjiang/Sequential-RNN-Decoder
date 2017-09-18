@@ -4,11 +4,10 @@ import numpy as np
 import math
 import tensorflow as tf
 import keras
-from keras.models import Sequential, Model
+from keras.models import Model
 from keras.layers import Dense, Input
 from keras.layers.normalization import BatchNormalization
 from keras.layers.core import Lambda
-from keras.layers.convolutional import Conv1D, Conv2D
 from keras.layers import TimeDistributed
 from keras.layers import LSTM, GRU, SimpleRNN
 from keras.layers.wrappers import  Bidirectional

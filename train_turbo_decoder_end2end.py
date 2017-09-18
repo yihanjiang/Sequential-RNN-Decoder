@@ -156,6 +156,13 @@ if __name__ == '__main__':
 
     print '[Setting Parameters]Codec type is ', codec_type
 
+    if '-num_hidden_unit' in n_inp:
+        ind1      = n_inp.index('-num_hidden_unit')
+        num_hidden_unit = int(n_inp[ind1+1])
+    else:
+        num_hidden_unit = 200
+
+    print '[Setting Parameters]RNN Number of hidden unit ', num_hidden_unit
 
     ##########################################
     # Setting Up Codec
@@ -173,22 +180,20 @@ if __name__ == '__main__':
     trellis2 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
     interleaver = RandInterlv.RandInterlv(block_len, 0)
     p_array = interleaver.p_array
-    print '[BCJR Example Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
+    print '[Setting Parameters] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
     codec  = [trellis1, trellis2, interleaver]
 
     ##########################################
     # Setting Up RNN Model
     ##########################################
 
-    num_hidden_unit = 200
     start_time = time.time()
 
     model = load_model(learning_rate=learning_rate,
-                       network_saved_path = starting_model_path,
+                       network_saved_path = starting_model_path, num_hidden_unit=num_hidden_unit,
                        interleave_array = p_array, dec_iter_num = dec_iter_num)
 
-
-    print model.get_config()
+    #print model.get_config()
 
     end_time = time.time()
     print '[RNN decoder]loading RNN model takes ', str(end_time-start_time), ' secs'

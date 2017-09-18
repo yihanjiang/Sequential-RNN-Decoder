@@ -114,7 +114,7 @@ def generate_noise(noise_type, sigma, data_shape, vv =5.0, radar_power = 20.0, r
 # Build RNN Feed Helper Function
 #######################################
 
-def build_rnn_data_feed(num_block, block_len, noiser, codec,  **kwargs):
+def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False ,**kwargs):
     '''
 
     :param num_block:
@@ -154,7 +154,11 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec,  **kwargs):
     X_feed = []
     X_message = []
     for nbb in range(num_block):
-        message_bits = np.random.randint(0, 2, block_len)
+        if is_all_zero == False:
+            message_bits = np.random.randint(0, 2, block_len)
+        else:
+            message_bits = np.random.randint(0, 1, block_len)
+
         X_message.append(message_bits)
         [sys, par1, par2] = turbo.turbo_encode(message_bits, trellis1, trellis2, interleaver)
 
