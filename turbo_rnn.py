@@ -26,6 +26,50 @@ import scipy.io as sio
 import matplotlib
 import h5py
 
+#######################################
+# TBD: Customize Layer for future use
+#######################################
+# TBD
+class TurboRNNLayer(Layer):
+    def __init__(self, interleave_array, **kwargs):
+        self.supports_masking = True
+        self.interleave_array = interleave_array
+        super(TurboRNNLayer, self).__init__(**kwargs)
+
+    def call(self, inputs, mask=None):
+        if len(inputs.get_shape()) != 3:
+            raise ValueError('Aaaaa our input is not of dim 3!')
+        a = inputs
+
+        output_list = [None for _ in range(len(self.interleave_array))]
+        b = []
+        for step_index, element in enumerate(self.interleave_array):
+            b.append(a[:,step_index,:])
+
+        for origal_index, inter_index in zip(range(len(self.interleave_array)), self.interleave_array):
+            output_list[inter_index] = b[origal_index]
+
+        res = K.stack(output_list, axis=1)
+        return res
+
+    def get_output_shape_for(self, input_shape):
+        a_shape = input_shape
+        return (a_shape[0], a_shape[1], a_shape[2])
+
+    def compute_output_shape(self, input_shape):
+        a_shape = input_shape
+        return (a_shape[0], a_shape[1], a_shape[2])
+
+    def compute_mask(self, inputs, masks=None):
+        if masks is None:
+            return None
+        return masks[1]
+
+#######################################
+# TBD: Customize Layer for future use
+#######################################
+# TBD
+
 class DeInterleave(Layer):
     """
     Customized Layer for DeInterleaver, no Parameter to train
