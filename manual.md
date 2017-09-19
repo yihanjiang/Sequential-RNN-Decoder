@@ -18,7 +18,6 @@ Dependency:
 (4) h5py (2.7.0)
 (5) tensorflow (1.2.1)
 
-
 Use pip to install above packages.
 
 ########################################################
@@ -102,6 +101,7 @@ bcjr_outputs, bcjr_inputs, num_iteration, block_len
 (11)-rnn_direction
 (12)-rnn_type            Choose from 'rnn-gru','rnn-lstm' now
 
+(13)-codec_type          'lte' or 'default'. Predefined Codec
 
 
 

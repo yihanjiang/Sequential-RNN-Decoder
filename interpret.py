@@ -466,7 +466,7 @@ def ber_rnn_compare():
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 100000
+    num_block = 1000
 
 
     # interpret_0  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)

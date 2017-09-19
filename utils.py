@@ -54,32 +54,45 @@ def corrupt_signal(input_signal, noise_type, sigma = 1.0,
 
     if noise_type == 'awgn':
         noise = sigma * np.random.standard_normal(data_shape) # Define noise
-        corrupt_signal = 2.0*input_signal-1.0 + noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
 
     elif noise_type == 't-dist':
         noise = sigma * math.sqrt((vv-2)/vv) *np.random.standard_t(vv, size = data_shape)
-        corrupt_signal = 2.0*input_signal-1.0 + noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
 
     elif noise_type == 'awgn+radar':
-        noise = sigma * np.random.standard_normal(data_shape) + \
-                np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
-        corrupt_signal = 2.0*input_signal-1.0 + noise
+        bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
+        add_pos     = np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
+        add_poscomp = np.ones(data_shape) - abs(add_pos)
+
+        corrupted_signal = bpsk_signal * add_poscomp + np.random.normal(radar_power, 1.0,size = data_shape ) * add_pos
+
+        # noise = sigma * np.random.standard_normal(data_shape) + \
+        #         np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
+        #
+        # corrupted_signal = 2.0*input_signal-1.0  + noise
 
     elif noise_type == 'radar':
         noise = np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
-        corrupt_signal = 2.0*input_signal-1.0 + noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
 
     elif noise_type == 'awgn+radar+denoise':
-        noise = np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
-        corrupt_signal = 2.0*input_signal-1.0 + noise
-        corrupt_signal  = stats.threshold(corrupt_signal, threshmin=-denoise_thd, threshmax=denoise_thd, newval=0.0)
+        bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
+        add_pos     = np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
+        add_poscomp = np.ones(data_shape) - abs(add_pos)
+        corrupted_signal = bpsk_signal * add_poscomp + np.random.normal(radar_power, 1.0,size = data_shape ) * add_pos
+
+        corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-denoise_thd, threshmax=denoise_thd, newval=0.0)
+
+        # noise = np.random.normal(radar_power, 1.0,size = data_shape ) * np.random.choice([-1.0, 0.0, 1.0], data_shape, p=[radar_prob/2, 1 - radar_prob, radar_prob/2])
+        # corrupted_signal = 2.0*input_signal-1.0 + noise
+        # corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-denoise_thd, threshmax=denoise_thd, newval=0.0)
 
     else:
         noise = sigma * np.random.standard_normal(data_shape)
-        corrupt_signal = 2.0*input_signal-1.0 + noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
 
-
-    return corrupt_signal
+    return corrupted_signal
 
 def generate_noise(noise_type, sigma, data_shape, vv =5.0, radar_power = 20.0, radar_prob = 5e-2):
     '''
@@ -131,12 +144,18 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
     vv          = 5.0
     radar_power = 20.0
     radar_prob  = 5e-2
+    denoise_thd = 10.0
 
     if noise_type == 't-dist':
         vv = noiser[2]
     elif noise_type == 'awgn+radar':
         radar_power = noiser[3]
         radar_prob  = noiser[4]
+
+    elif noise_type == 'awgn+radar+denoise':
+        radar_power = noiser[3]
+        radar_prob  = noiser[4]
+        denoise_thd = noiser[5]
     elif noise_type == 'customize':
         '''
         TBD, noise model shall be open to other user, for them to train their own decoder.
@@ -163,21 +182,12 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
         [sys, par1, par2] = turbo.turbo_encode(message_bits, trellis1, trellis2, interleaver)
 
         sys_r  = corrupt_signal(sys, noise_type =noise_type, sigma = noise_sigma,
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
         par1_r = corrupt_signal(par1, noise_type =noise_type, sigma = noise_sigma,
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
         par2_r = corrupt_signal(par2, noise_type =noise_type, sigma = noise_sigma,
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
 
-        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = sys.shape,
-        #                        vv =vv, radar_power = radar_power, radar_prob = radar_prob)
-        # sys_r = (2.0*sys-1) + noise # Modulation plus noise
-        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par1.shape,
-        #                        vv =vv, radar_power = radar_power, radar_prob = radar_prob)
-        # par1_r = (2.0*par1-1) + noise # Modulation plus noise
-        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par2.shape,
-        #                        vv =vv, radar_power = radar_power, radar_prob = radar_prob)
-        # par2_r = (2.0*par2-1) + noise # Modulation plus noise
 
         rnn_feed_raw = np.stack([sys_r, par1_r, np.zeros(sys_r.shape), intleave(sys_r, p_array), par2_r], axis = 0).T
         rnn_feed = rnn_feed_raw

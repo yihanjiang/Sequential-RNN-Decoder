@@ -4,7 +4,9 @@ Author: Yihan Jiang, UW & Hyeji Kim, UIUC.
 
 We have a few scripts for user:
 
-(1) evaluate_performance.py is a command line tool for evaluating Turbo RNN Decoder's BER curve.
+(1) evaluate_rnn.py is a command line tool for evaluating Turbo RNN Decoder's BER curve.
+
+(2) evaluate_rnn.py is a command line tool for evaluating Turbo RNN Decoder's BER curve.
 
 (2) train_turbo_decoder_end2end.py is a command line tool for training Turbo Decoder with different noise.
 
@@ -29,3 +31,15 @@ Dependency:
 
 
 Use pip to install above packages.
+
+
+Organization of codes:
+(1) bcjr_util.py and utils.py:  Plan to merge. Utility Helpful Functions. 
+
+(2) turbo_RNN.py: Stacked Turbo RNN decoder. Plan to add TurboRNN Layer for further usage.
+
+(3) commpy_turbo_infer.py: Use Commpy to get BER for Normal Turbo Decoding.
+
+(4) interpret.py: Interpret module, try to understand what we have learned.
+
+(5) train_bcjr_rnn.py: Init the Turbo Decoder with some good init. 
