@@ -222,10 +222,11 @@ class Interpret(object):
         interleaver = RandInterlv.RandInterlv(self.block_len, 0)
 
         from turbo_rnn import load_model
-        from commpy.utilities import hamming_dist
 
         dec_iter_num    = 6
         num_hidden_unit = 200
+
+        print '[BCJR RNN Interpret] number of block is', self.num_block
 
         model = load_model(interleave_array=interleaver.p_array, network_saved_path = self.network_saved_path, block_len=self.block_len,
                            dec_iter_num = dec_iter_num, num_hidden_unit=num_hidden_unit)
@@ -279,11 +280,11 @@ class Interpret(object):
         map_ber_bursty = np.stack(map_ber_list, axis=0)
         map_ber_bursty = np.mean(map_ber_bursty, axis=0).tolist()[0]
 
-        print rnn_ber_bursty
-        print map_ber_bursty
+        print '[BCJR RNN Interpret] RNN BER for Bursty Noise Case', rnn_ber_bursty
+        print '[BCJR RNN Interpret] BCJR BER for Bursty Noise Case', map_ber_bursty
         #
-        print rnn_ber_non_bursty
-        print map_ber_non_bursty
+        print '[BCJR RNN Interpret] RNN BER for Non Bursty Noise Case', rnn_ber_non_bursty
+        print '[BCJR RNN Interpret] BCJR BER for Non Bursty Noise Case', map_ber_non_bursty
 
         if is_compute_no_bursty:
             if is_compute_map:
@@ -465,7 +466,8 @@ def ber_rnn_compare():
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 1000
+    num_block = 100000
+
 
     # interpret_0  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
     # map_ber_non_bursty1, rnn_ber_non_bursty1, map_ber_bursty1, rnn_ber_bursty1 = interpret_0.ber(bit_pos_list=[radar_bit_pos], sigma=1.0,
@@ -505,14 +507,14 @@ def ber_rnn_compare():
     plt.xlabel('Position')
     plt.title('Compare BER between RNN/Turbo\n over Turbo' + label1+label2+label3 + 'RNN')
     plt.yscale('log')
-    p1, = plt.plot(map_ber_non_bursty1, 'b--', label ='Turbo Non Bursty' )
-    p2, = plt.plot(rnn_ber_non_bursty1, 'g', label =label1 + 'RNN Non Bursty')
+    p1, = plt.plot(map_ber_non_bursty1, 'b-*', label ='Turbo Non Bursty' )
+    p2, = plt.plot(rnn_ber_non_bursty1, 'g-*', label =label1 + 'RNN Non Bursty')
     p3, = plt.plot(map_ber_bursty1,     'b', label ='Turbo Bursty')
-    p4, = plt.plot(rnn_ber_bursty1,     'g--', label =label1 + 'RNN Bursty')
+    p4, = plt.plot(rnn_ber_bursty1,     'g', label =label1 + 'RNN Bursty')
 
-    p5, = plt.plot(rnn_ber_non_bursty2, 'y--', label =label2 + 'RNN Non Bursty')
+    p5, = plt.plot(rnn_ber_non_bursty2, 'y-*', label =label2 + 'RNN Non Bursty')
     p6, = plt.plot(rnn_ber_bursty2,     'y', label =label2 + 'RNN Bursty')
-    p7, = plt.plot(rnn_ber_non_bursty3, 'k--', label =label3 + 'RNN Non Bursty')
+    p7, = plt.plot(rnn_ber_non_bursty3, 'k-*', label =label3 + 'RNN Non Bursty')
     p8, = plt.plot(rnn_ber_bursty3,     'k', label =label3 + 'RNN Bursty')
 
     plt.legend(handles = [p1, p3,p4, p2, p5, p6, p7, p8])
