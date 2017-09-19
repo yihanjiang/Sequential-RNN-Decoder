@@ -2,17 +2,19 @@
 RNN Turbo Decoder
 Author: Yihan Jiang, UW & Hyeji Kim, UIUC.
 
+Updated: 09/19/2017
+
 We have a few scripts for user:
 
 (1) evaluate_rnn.py is a command line tool for evaluating Turbo RNN Decoder's BER curve.
 
-(2) evaluate_rnn.py is a command line tool for evaluating Turbo RNN Decoder's BER curve.
+(2) evaluate_commpy.py is a command line tool for evaluating Turbo Commpy Decoder's BER curve.
 
-(2) train_turbo_decoder_end2end.py is a command line tool for training Turbo Decoder with different noise.
+(3) train_turbo_decoder_end2end.py is a command line tool for training Turbo Decoder with different noise.
 
-(3) train_bcjr_rnn.py is a command line tool for training BCJR-like RNN
+(4) train_bcjr_rnn.py is a command line tool for training BCJR-like RNN
 
-(4) TBD: interpretibility.py
+(5) interpret.py shows how to duplicate interpretable graph in paper
 
 (*) TBD: Support User Defined Codec
 
@@ -29,7 +31,6 @@ Dependency:
 (4) h5py (2.7.0)
 (5) tensorflow (1.2.1)
 
-
 Use pip to install above packages.
 
 
@@ -38,8 +39,8 @@ Organization of codes:
 
 (2) turbo_RNN.py: Stacked Turbo RNN decoder. Plan to add TurboRNN Layer for further usage.
 
-(3) commpy_turbo_infer.py: Use Commpy to get BER for Normal Turbo Decoding.
+(3) model_zoo: trained models. 
 
-(4) interpret.py: Interpret module, try to understand what we have learned.
+(4) commpy: Python Channel Codec.
 
-(5) train_bcjr_rnn.py: Init the Turbo Decoder with some good init. 
+(5) interface: usage for customized channel/decoder, etc.
