@@ -31,9 +31,29 @@ import h5py
 #######################################
 # TBD
 class TurboRNNLayer(Layer):
-    def __init__(self, interleave_array, **kwargs):
+
+    # def __init__(self, output_dim, **kwargs):
+    #     self.output_dim = output_dim
+    #     super(MyLayer, self).__init__(**kwargs)
+    #
+    # def build(self, input_shape):
+    #     # Create a trainable weight variable for this layer.
+    #     self.kernel = self.add_weight(name='kernel',
+    #                                   shape=(input_shape[1], self.output_dim),
+    #                                   initializer='uniform',
+    #                                   trainable=True)
+    #     super(MyLayer, self).build(input_shape)  # Be sure to call this somewhere!
+    #
+    # def call(self, x):
+    #     return K.dot(x, self.kernel)
+    #
+    # def compute_output_shape(self, input_shape):
+    #     return (input_shape[0], self.output_dim)
+
+    def __init__(self, interleave_array, num_hidden_unit = 200, num_iteration = 6,  **kwargs):
         self.supports_masking = True
         self.interleave_array = interleave_array
+
         super(TurboRNNLayer, self).__init__(**kwargs)
 
     def call(self, inputs, mask=None):
@@ -299,5 +319,15 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
 
     return model
 
+def test_TurboLayer():
+    '''
+    Test If Turbo Layer works.
+    :return:
+    '''
+    pass
+
+
 if __name__ == '__main__':
-    load_model()
+    #load_model()
+
+    test_TurboLayer()

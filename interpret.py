@@ -35,7 +35,7 @@ class Interpret(object):
         self.num_block = num_block
         self.network_saved_path = network_saved_path
         if is_ll:
-            self.model_ll  = self._load_model()
+            self.model  = self._load_model()
 
 
     def _load_model(self,  num_hidden_unit = 200):
@@ -108,7 +108,9 @@ class Interpret(object):
 
         return X_feed_test
 
-    def likelihood(self, bit_pos_list, sigma, radar_noise_power=20.0, is_compute_no_bursty = False, is_compute_map = False):
+    def likelihood(self, bit_pos_list, sigma, radar_noise_power=20.0,
+                   is_same_code = False, is_all_zero = True,
+                   is_compute_no_bursty = False, is_compute_map = False):
         '''
         compute the likelihood along the positions.
         :param bit_pos:
@@ -132,7 +134,8 @@ class Interpret(object):
 
         noiser = ['awgn', sigma]
         codec  = [trellis1, trellis2, interleaver]
-        X_feed_test, X_message_test = build_rnn_data_feed(self.num_block, self.block_len, noiser, codec, is_all_zero=True)
+        X_feed_test, X_message_test = build_rnn_data_feed(self.num_block, self.block_len, noiser, codec,
+                                                          is_same_code=is_same_code, is_all_zero=is_all_zero)
 
         if is_compute_no_bursty:
             ##############################################################
@@ -161,12 +164,6 @@ class Interpret(object):
 
                 map_ll_non_bursty = np.stack(np.array(map_likelihood_list), axis=0)
                 map_ll_non_bursty = np.mean(map_ll_non_bursty, axis=0).T.tolist()
-
-
-        # # Bursty Noise Case
-        # radar_noise = np.zeros(X_feed_test.shape)
-        # radar_noise[:, bit_pos, :] = radar_noise_power
-        # X_feed_test += radar_noise
 
         for bit_pos in bit_pos_list:
             X_feed_test = self.add_bursty_noise(X_feed_test, bit_pos, radar_noise_power)
@@ -309,25 +306,29 @@ def likelihood_snr_range():
     ###############################################
     #network_saved_path = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
     network_saved_path = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_1.h5'
-    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=10000)
+    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100)
 
     radar_bit_pos = 50
 
     map_ll_non_bursty1, rnn_ll_non_bursty1, map_ll_bursty1, rnn_ll_bursty1 = interpret.likelihood(bit_pos_list=[radar_bit_pos], sigma=0.5,
                                                                                               radar_noise_power = 10, is_compute_map=True,
-                                                                                              is_compute_no_bursty=True)
+                                                                                              is_compute_no_bursty=True,
+                                                                                              is_same_code = False, is_all_zero = True)
 
     map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
                                                                                               radar_noise_power = 10, is_compute_map=True,
-                                                                                              is_compute_no_bursty=True)
+                                                                                              is_compute_no_bursty=True,
+                                                                                              is_same_code = False, is_all_zero = True)
 
     map_ll_non_bursty3, rnn_ll_non_bursty3, map_ll_bursty3, rnn_ll_bursty3 = interpret.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
                                                                                               radar_noise_power = 10, is_compute_map=True,
-                                                                                              is_compute_no_bursty=True)
+                                                                                              is_compute_no_bursty=True,
+                                                                                              is_same_code = False, is_all_zero = True)
 
     map_ll_non_bursty4, rnn_ll_non_bursty4, map_ll_bursty4, rnn_ll_bursty4 = interpret.likelihood(bit_pos_list=[radar_bit_pos],sigma = 5.0,
                                                                                               radar_noise_power = 10, is_compute_map=True,
-                                                                                              is_compute_no_bursty=True)
+                                                                                              is_compute_no_bursty=True,
+                                                                                              is_same_code = False, is_all_zero = True)
 
     plt.figure(1)
     plt.subplot(121)
@@ -365,6 +366,137 @@ def likelihood_snr_range():
     plt.legend(handles = [p1, p2, p3, p4])
     plt.show()
 
+def likelihood_1():
+    ###############################################
+    # Input Parameters
+    ###############################################
+    label1 = 't-dist v3 trained '
+    label2 = 'radar trained '
+    label3 = 'awgn trained'
+
+    network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
+    network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
+    network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
+
+    radar_bit_pos = 50
+    num_block = 1000
+    sigma_set = 0.0
+
+    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
+
+    map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = sigma_set,
+                                                                  radar_noise_power = 10, is_compute_map=True,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    K.clear_session()
+    interpret_2 = Interpret(network_saved_path=network_saved_path_2, block_len=100, num_block=num_block)
+
+    rnn_ll_non_bursty6, rnn_ll_bursty6 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = sigma_set,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+
+
+    K.clear_session()
+    interpret_3 = Interpret(network_saved_path=network_saved_path_3, block_len=100, num_block=num_block)
+
+    rnn_ll_non_bursty9, rnn_ll_bursty9 = interpret_3.likelihood(bit_pos_list=[radar_bit_pos],sigma = sigma_set,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    plt.figure(1)
+    plt.title('likelihood compare on different snr, RNN, No Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_non_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_non_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma'+ str(sigma_set))
+    #p3, = plt.plot(rnn_ll_non_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_non_bursty5, 'g', label =label2 +'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_non_bursty6], 'g-*', label =label2 +'RNN AWGN sigma'+ str(sigma_set))
+    #p7, = plt.plot(rnn_ll_non_bursty7, 'g--', label =label2 +'RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_non_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_non_bursty9], 'b-*', label =label3 +'RNN AWGN sigma'+ str(sigma_set))
+    #p0, = plt.plot(rnn_ll_non_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+
+    plt.figure(2)
+    plt.yscale('log')
+    plt.title('likelihood compare on different snr, RNN, No Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_non_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_non_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma'+ str(sigma_set))
+    #p3, = plt.plot(rnn_ll_non_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_non_bursty5, 'g', label =label2 +'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_non_bursty6], 'g-*', label =label2 +'RNN AWGN sigma'+ str(sigma_set))
+    #p7, = plt.plot(rnn_ll_non_bursty7, 'g--', label =label2 +'RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_non_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_non_bursty9], 'b-*', label =label3 +'RNN AWGN sigma'+ str(sigma_set))
+    #p0, = plt.plot(rnn_ll_non_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+    #plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
+
+    plt.figure(3)
+    plt.title('likelihood compare on different snr, RNN, with Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma'+ str(sigma_set))
+    #p3, = plt.plot(rnn_ll_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_bursty5, 'g', label =label2 + 'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'g-*', label =label2 + 'RNN AWGN sigma'+ str(sigma_set))
+    #p7, = plt.plot(rnn_ll_bursty7, 'g--', label =label2 + ' RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'b-*', label =label3 +'RNN AWGN sigma'+ str(sigma_set))
+    #p0, = plt.plot(rnn_ll_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+
+    plt.figure(4)
+    plt.yscale('log')
+    plt.title('likelihood compare on different snr, RNN, with Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma'+ str(sigma_set))
+    #p3, = plt.plot(rnn_ll_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_bursty5, 'g', label =label2 + 'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'g-*', label =label2 + 'RNN AWGN sigma'+ str(sigma_set))
+    #p7, = plt.plot(rnn_ll_bursty7, 'g--', label =label2 + ' RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'b-*', label =label3 +'RNN AWGN sigma'+ str(sigma_set))
+    #p0, = plt.plot(rnn_ll_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+    #plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
+
+
+    plt.figure(5)
+    plt.title('likelihood compare on different snr at sigma ='+str(sigma_set)+'with Bursty Noise\n'+ label1+label2+label3)
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'g-*', label =label1 + 'RNN AWGN sigma'+ str(sigma_set))
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'k-*', label =label2 + 'RNN AWGN sigma'+ str(sigma_set))
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'y-*', label =label3 +'RNN AWGN sigma'+ str(sigma_set))
+
+    p1, = plt.plot([abs(item) for item in map_ll_bursty2], 'r', label ='Turbo Bursty AWGN sigma'+ str(sigma_set))
+    p0, = plt.plot([abs(item) for item in map_ll_non_bursty2], 'b', label ='Turbo non-bursty RNN AWGN sigma'+ str(sigma_set))
+
+    plt.legend(handles = [p0, p1, p2, p6, p9])
+
+    plt.figure(6)
+    plt.yscale('log')
+    plt.title('likelihood compare on different snr at sigma ='+str(sigma_set)+'with Bursty Noise\n'+ label1+label2+label3)
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'g-*', label =label1 + 'RNN AWGN sigma'+ str(sigma_set))
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'k-*', label =label2 + 'RNN AWGN sigma '+ str(sigma_set))
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'y-*', label =label3 +'RNN AWGN sigma '+ str(sigma_set))
+
+    p1, = plt.plot([abs(item) for item in map_ll_bursty2], 'r', label ='Turbo Bursty AWGN sigma'+ str(sigma_set))
+    p0, = plt.plot([abs(item) for item in map_ll_non_bursty2], 'b', label ='Turbo non-bursty RNN AWGN sigma'+ str(sigma_set))
+
+    plt.legend(handles = [p0, p1, p2, p6, p9])
+
+    plt.show()
+
 def likelihood_radartrained_vs_awgntrained():
     ###############################################
     # Input Parameters
@@ -378,78 +510,265 @@ def likelihood_radartrained_vs_awgntrained():
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 5000
+    num_block = 200
+
 
     interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
+
     rnn_ll_non_bursty1, rnn_ll_bursty1 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
-    rnn_ll_non_bursty2, rnn_ll_bursty2 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
-                                                                  radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
+                                                                  radar_noise_power = 10, is_compute_map=True,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
     rnn_ll_non_bursty3, rnn_ll_bursty3 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
 
     K.clear_session()
     interpret_2 = Interpret(network_saved_path=network_saved_path_2, block_len=100, num_block=num_block)
 
     rnn_ll_non_bursty5, rnn_ll_bursty5 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
 
     rnn_ll_non_bursty6, rnn_ll_bursty6 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
 
     rnn_ll_non_bursty7, rnn_ll_bursty7 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
 
     K.clear_session()
     interpret_3 = Interpret(network_saved_path=network_saved_path_3, block_len=100, num_block=num_block)
 
     rnn_ll_non_bursty8, rnn_ll_bursty8 = interpret_3.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
 
     rnn_ll_non_bursty9, rnn_ll_bursty9 = interpret_3.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
 
     rnn_ll_non_bursty0, rnn_ll_bursty0 = interpret_3.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
                                                                   radar_noise_power = 10, is_compute_map=False,
-                                                                  is_compute_no_bursty=True)
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
 
     plt.figure(1)
     plt.title('likelihood compare on different snr, RNN, No Bursty Noise\n'+ label1 +'vs' +label2)
-    p1, = plt.plot(rnn_ll_non_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
-    p2, = plt.plot(rnn_ll_non_bursty2, 'g', label =label1 + 'RNN AWGN sigma 1.0')
-    p3, = plt.plot(rnn_ll_non_bursty3, 'b', label =label1 + 'RNN AWGNsigma 2.0')
+    #p1, = plt.plot(rnn_ll_non_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_non_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma 1.0')
+    #p3, = plt.plot(rnn_ll_non_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
 
-    p5, = plt.plot(rnn_ll_non_bursty5, 'y-*', label =label2 +'RNN AWGN sigma 0.5' )
-    p6, = plt.plot(rnn_ll_non_bursty6, 'g-*', label =label2 +'RNN AWGN sigma 1.0')
-    p7, = plt.plot(rnn_ll_non_bursty7, 'b-*', label =label2 +'RNN AWGNsigma 2.0')
+    #p5, = plt.plot(rnn_ll_non_bursty5, 'g', label =label2 +'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_non_bursty6], 'g-*', label =label2 +'RNN AWGN sigma 1.0')
+    #p7, = plt.plot(rnn_ll_non_bursty7, 'g--', label =label2 +'RNN AWGNsigma 2.0')
 
-    p8, = plt.plot(rnn_ll_non_bursty8, 'y--', label =label3 +'RNN AWGN sigma 0.5' )
-    p9, = plt.plot(rnn_ll_non_bursty9, 'g--', label =label3 +'RNN AWGN sigma 1.0')
-    p0, = plt.plot(rnn_ll_non_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
-    plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
+    #p8, = plt.plot(rnn_ll_non_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_non_bursty9], 'b-*', label =label3 +'RNN AWGN sigma 1.0')
+    #p0, = plt.plot(rnn_ll_non_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+
+    plt.figure(2)
+    plt.yscale('log')
+    plt.title('likelihood compare on different snr, RNN, No Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_non_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_non_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma 1.0')
+    #p3, = plt.plot(rnn_ll_non_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_non_bursty5, 'g', label =label2 +'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_non_bursty6], 'g-*', label =label2 +'RNN AWGN sigma 1.0')
+    #p7, = plt.plot(rnn_ll_non_bursty7, 'g--', label =label2 +'RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_non_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_non_bursty9], 'b-*', label =label3 +'RNN AWGN sigma 1.0')
+    #p0, = plt.plot(rnn_ll_non_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+    #plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
+
+    plt.figure(3)
+    plt.title('likelihood compare on different snr, RNN, with Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma 1.0')
+    #p3, = plt.plot(rnn_ll_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_bursty5, 'g', label =label2 + 'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'g-*', label =label2 + 'RNN AWGN sigma 1.0')
+    #p7, = plt.plot(rnn_ll_bursty7, 'g--', label =label2 + ' RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'b-*', label =label3 +'RNN AWGN sigma 1.0')
+    #p0, = plt.plot(rnn_ll_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+
+    plt.figure(4)
+    plt.yscale('log')
+    plt.title('likelihood compare on different snr, RNN, with Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma 1.0')
+    #p3, = plt.plot(rnn_ll_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_bursty5, 'g', label =label2 + 'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'g-*', label =label2 + 'RNN AWGN sigma 1.0')
+    #p7, = plt.plot(rnn_ll_bursty7, 'g--', label =label2 + ' RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'b-*', label =label3 +'RNN AWGN sigma 1.0')
+    #p0, = plt.plot(rnn_ll_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+    #plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
+
+
+    plt.figure(5)
+    plt.title('likelihood compare on different snr at sigma = 1.0 with Bursty Noise\n'+ label1+label2+label3)
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'g-*', label =label1 + 'RNN AWGN sigma 1.0')
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'k-*', label =label2 + 'RNN AWGN sigma 1.0')
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'y-*', label =label3 +'RNN AWGN sigma 1.0')
+
+    p1, = plt.plot([abs(item) for item in map_ll_bursty2], 'r', label ='Turbo Bursty AWGN sigma 1.0')
+    p0, = plt.plot([abs(item) for item in map_ll_non_bursty2], 'b', label ='Turbo non-bursty RNN AWGN sigma 1.0')
+
+    plt.legend(handles = [p0, p1, p2, p6, p9])
+
+    plt.figure(6)
+    plt.yscale('log')
+    plt.title('likelihood compare on different snr at sigma = 1.0 with Bursty Noise\n'+ label1+label2+label3)
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'g-*', label =label1 + 'RNN AWGN sigma 1.0')
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'k-*', label =label2 + 'RNN AWGN sigma 1.0')
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'y-*', label =label3 +'RNN AWGN sigma 1.0')
+
+    p1, = plt.plot([abs(item) for item in map_ll_bursty2], 'r', label ='Turbo Bursty AWGN sigma 1.0')
+    p0, = plt.plot([abs(item) for item in map_ll_non_bursty2], 'b', label ='Turbo non-bursty RNN AWGN sigma 1.0')
+
+    plt.legend(handles = [p0, p1, p2, p6, p9])
+
+    plt.show()
+
+
+def likelihood_model_compare():
+    ###############################################
+    # Input Parameters
+    ###############################################
+    label1 = 't-dist v3 trained '
+    label2 = 'radar trained '
+    label3 = 'awgn trained'
+
+    network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
+    network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
+    network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
+
+    radar_bit_pos = 50
+    num_block = 100
+
+    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
+
+    rnn_ll_non_bursty1, rnn_ll_bursty1 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
+                                                                  radar_noise_power = 10, is_compute_map=True,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+    rnn_ll_non_bursty3, rnn_ll_bursty3 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    K.clear_session()
+    interpret_2 = Interpret(network_saved_path=network_saved_path_2, block_len=100, num_block=num_block)
+
+    rnn_ll_non_bursty5, rnn_ll_bursty5 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    rnn_ll_non_bursty6, rnn_ll_bursty6 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    rnn_ll_non_bursty7, rnn_ll_bursty7 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    K.clear_session()
+    interpret_3 = Interpret(network_saved_path=network_saved_path_3, block_len=100, num_block=num_block)
+
+    rnn_ll_non_bursty8, rnn_ll_bursty8 = interpret_3.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    rnn_ll_non_bursty9, rnn_ll_bursty9 = interpret_3.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    rnn_ll_non_bursty0, rnn_ll_bursty0 = interpret_3.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
+                                                                  radar_noise_power = 10, is_compute_map=False,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False)
+
+    plt.figure(1)
+    plt.title('likelihood compare on different snr, RNN, No Bursty Noise\n'+ label1 +'vs' +label2)
+    #p1, = plt.plot(rnn_ll_non_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_non_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma 1.0')
+    #p3, = plt.plot(rnn_ll_non_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
+
+    #p5, = plt.plot(rnn_ll_non_bursty5, 'g', label =label2 +'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_non_bursty6], 'g-*', label =label2 +'RNN AWGN sigma 1.0')
+    #p7, = plt.plot(rnn_ll_non_bursty7, 'g--', label =label2 +'RNN AWGNsigma 2.0')
+
+    #p8, = plt.plot(rnn_ll_non_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_non_bursty9], 'b-*', label =label3 +'RNN AWGN sigma 1.0')
+    #p0, = plt.plot(rnn_ll_non_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+    #plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
 
     plt.figure(2)
     plt.title('likelihood compare on different snr, RNN, with Bursty Noise\n'+ label1 +'vs' +label2)
-    p1, = plt.plot(rnn_ll_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
-    p2, = plt.plot(rnn_ll_bursty2, 'g', label =label1 + 'RNN AWGN sigma 1.0')
-    p3, = plt.plot(rnn_ll_bursty3, 'b', label =label1 + 'RNN AWGNsigma 2.0')
+    #p1, = plt.plot(rnn_ll_bursty1, 'y', label =label1 + 'RNN AWGN sigma 0.5' )
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'y-*', label =label1 + 'RNN AWGN sigma 1.0')
+    #p3, = plt.plot(rnn_ll_bursty3, 'y--', label =label1 + 'RNN AWGNsigma 2.0')
 
-    p5, = plt.plot(rnn_ll_bursty5, 'y-*', label =label2 + 'RNN AWGN sigma 0.5' )
-    p6, = plt.plot(rnn_ll_bursty6, 'g-*', label =label2 + 'RNN AWGN sigma 1.0')
-    p7, = plt.plot(rnn_ll_bursty7, 'b-*', label =label2 + ' RNN AWGNsigma 2.0')
+    #p5, = plt.plot(rnn_ll_bursty5, 'g', label =label2 + 'RNN AWGN sigma 0.5' )
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'g-*', label =label2 + 'RNN AWGN sigma 1.0')
+    #p7, = plt.plot(rnn_ll_bursty7, 'g--', label =label2 + ' RNN AWGNsigma 2.0')
 
-    p8, = plt.plot(rnn_ll_bursty8, 'y--', label =label3 +'RNN AWGN sigma 0.5' )
-    p9, = plt.plot(rnn_ll_bursty9, 'g--', label =label3 +'RNN AWGN sigma 1.0')
-    p0, = plt.plot(rnn_ll_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
-    plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
+    #p8, = plt.plot(rnn_ll_bursty8, 'b', label =label3 +'RNN AWGN sigma 0.5' )
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'b-*', label =label3 +'RNN AWGN sigma 1.0')
+    #p0, = plt.plot(rnn_ll_bursty0, 'b--', label =label3 +'RNN AWGNsigma 2.0')
+    plt.legend(handles = [p2, p6, p9])
+    #plt.legend(handles = [p1, p2, p3, p5, p6, p7, p8, p9, p0])
+
+
+
+
+    plt.figure(3)
+    plt.title('likelihood compare on different snr at sigma = 1.0 with Bursty Noise\n'+ label1+label2+label3)
+    p2, = plt.plot([abs(item) for item in rnn_ll_bursty2], 'g-*', label =label1 + 'RNN AWGN sigma 1.0')
+    p6, = plt.plot([abs(item) for item in rnn_ll_bursty6], 'k-*', label =label2 + 'RNN AWGN sigma 1.0')
+    p9, = plt.plot([abs(item) for item in rnn_ll_bursty9], 'y-*', label =label3 +'RNN AWGN sigma 1.0')
+
+    p1, = plt.plot([abs(item) for item in map_ll_bursty2], 'r', label ='Turbo Bursty AWGN sigma 1.0')
+    p0, = plt.plot([abs(item) for item in map_ll_non_bursty2], 'b', label ='Turbo non-bursty RNN AWGN sigma 1.0')
+
+    plt.legend(handles = [p0, p1, p2, p6, p9])
+
     plt.show()
 
 def ber_rnn_compare():
@@ -466,7 +785,7 @@ def ber_rnn_compare():
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 1000
+    num_block = 100
 
 
     # interpret_0  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
@@ -520,7 +839,6 @@ def ber_rnn_compare():
     plt.legend(handles = [p1, p3,p4, p2, p5, p6, p7, p8])
     plt.show()
 
-
 def ber_snr_range():
     print '[Interpret] BER output of Stacked RNN/ Turbo Decoder'
     ###############################################
@@ -553,12 +871,16 @@ if __name__ == '__main__':
 
     # User Case 2, likelihood on RNN models. Compare the output scale.
     #likelihood_radartrained_vs_awgntrained()
+    likelihood_1()
 
     # User Case 3, ber on bursty noise. Compare stacked RNN decoder and Turbo Decoder's BER bit-wise
     #ber_snr_range()
 
     # User Case 4, ber on bursty noise over RNN models.
-    ber_rnn_compare()
+    #ber_rnn_compare()
+
+    # User Case 5
+    #likelihood_model_compare()
 
 
 

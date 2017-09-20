@@ -20,7 +20,7 @@ if __name__ == '__main__':
     n_inp = sys.argv[1:]
 
     if '--help' in n_inp:
-        with open('evaluate_performance.md','r') as fin:
+        with open('evaluate_rnn.md','r') as fin:
             print fin.read()
         exit_now = True
         sys.exit()
