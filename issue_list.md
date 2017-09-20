@@ -7,6 +7,7 @@ Pending Issues:
 (2) Support override a channel model
 
 (4) Speed up commpy by evaluate_commpy.py, but multiprocess
+ETA 0925
 
 (5) Finish up all manuals
 
