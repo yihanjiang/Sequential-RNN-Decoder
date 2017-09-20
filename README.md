@@ -2,9 +2,9 @@
 **RNN Turbo Decoder**
 Author: Yihan Jiang, UW & Hyeji Kim, UIUC.
 
->Updated: 09/19/2017
+Updated: 09/19/2017
 
-We have a few scripts for user: \
+We have a few scripts for user: 
 
 (1) **evaluate_rnn.py** is a command line tool for evaluating Turbo RNN Decoder's BER curve.\
 (2) **evaluate_commpy.py** is a command line tool for evaluating Turbo Commpy Decoder's BER curve.\
