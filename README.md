@@ -11,8 +11,8 @@ We have a few scripts for user: \
 (3) **train_turbo_decoder_end2end.py** is a command line tool for training Turbo Decoder with different noise.\
 (4) **train_bcjr_rnn.py** is a command line tool for training BCJR-like RNN.\
 (5) **interpret.py** shows how to duplicate interpretable graph in paper.\
-(*) TBD: Support User Defined Codec.\
-(*) TBD: User Defined Channel, or let user override channel easily.\
+(7) TBD: Support User Defined Codec.\
+(8) TBD: User Defined Channel, or let user override channel easily.
  
 Dependency:\
 (0) Python (2.7.10+)\
@@ -23,11 +23,11 @@ Dependency:\
                               Commpy will be depreciated for future versions.\
 (4) h5py (2.7.0)\
 (5) tensorflow (1.2.1)\
-Use pip to install above packages.\
+Use pip to install above packages.
 
 Organization of codes:\
 (1) bcjr_util.py and utils.py:  Plan to merge. Utility Helpful Functions. \
 (2) turbo_RNN.py: Stacked Turbo RNN decoder. Plan to add TurboRNN Layer for further usage.\
 (3) model_zoo: trained models. \
 (4) commpy: Python Channel Codec.\
-(5) interface: usage for customized channel/decoder, etc.\
+(5) interface: usage for customized channel/decoder, etc.
