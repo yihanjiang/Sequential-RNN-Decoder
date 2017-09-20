@@ -5,9 +5,7 @@ Author: Yihan Jiang, UW & Hyeji Kim, UIUC.
 Updated: 09/19/2017
 
 We have a few scripts for user:
-
 (1) evaluate_rnn.py is a command line tool for evaluating Turbo RNN Decoder's BER curve.
-
 (2) evaluate_commpy.py is a command line tool for evaluating Turbo Commpy Decoder's BER curve.
 
 (3) train_turbo_decoder_end2end.py is a command line tool for training Turbo Decoder with different noise.
