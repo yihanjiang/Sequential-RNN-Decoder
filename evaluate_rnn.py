@@ -20,7 +20,7 @@ if __name__ == '__main__':
     n_inp = sys.argv[1:]
 
     if '--help' in n_inp:
-        with open('evaluate_rnn.md','r') as fin:
+        with open('./manuals/evaluate_rnn.md','r') as fin:
             print fin.read()
         exit_now = True
         sys.exit()
@@ -57,6 +57,7 @@ if __name__ == '__main__':
     vv          = -1.0
     radar_power = -1.0
     radar_prob  = -1.0
+    denoise_thd   = 10.0
 
     if noise_type == 'awgn':
         print '[Setting Parameters] Noise Type is ', noise_type
@@ -83,6 +84,29 @@ if __name__ == '__main__':
             radar_prob   = 5e-2
 
         print '[Setting Parameters] Noise Type is ', noise_type, 'with Radar Power ', radar_power, ' with Radar Probability ', radar_prob
+
+    elif noise_type == 'awgn+radar+denoise':
+        if '-radar_power' in n_inp:
+            ind1 = n_inp.index('-radar_power')
+            radar_power   = float(n_inp[ind1+1])
+        else:
+            radar_power   = 20.0
+
+        if '-radar_prob' in n_inp:
+            ind1 = n_inp.index('-radar_prob')
+            radar_prob   = float(n_inp[ind1+1])
+        else:
+            radar_prob   = 5e-2
+
+        if '-denoise_thd' in n_inp:
+            ind1 = n_inp.index('-denoise_thd')
+            denoise_thd   = float(n_inp[ind1+1])
+        else:
+            denoise_thd   = 10.0
+
+        print '[Setting Parameters] Using Thresholding Denoise with denoise threshold', denoise_thd
+        print '[Setting Parameters] Noise Type is ', noise_type, 'with Radar Power ', radar_power, ' with Radar Probability ', radar_prob
+
 
     if '-snr_range' in n_inp:
         ind1      = n_inp.index('-snr_range')
@@ -181,7 +205,7 @@ if __name__ == '__main__':
 
     for idx in xrange(SNR_points):
         start_time = time.time()
-        noiser = [noise_type, test_sigmas[idx], vv, radar_power, radar_prob]
+        noiser = [noise_type, test_sigmas[idx], vv, radar_power, radar_prob, denoise_thd]
 
         X_feed_test, X_message_test = build_rnn_data_feed(num_block, block_len, noiser, codec)
         pd       = model.predict(X_feed_test,batch_size = 100)

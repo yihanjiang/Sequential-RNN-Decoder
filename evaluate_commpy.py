@@ -21,13 +21,13 @@ if __name__ == '__main__':
     # Loading Arguments
     ##########################################
     n_inp = sys.argv[1:]
-    print '[Turbo Decoder] Evaluate Commpy Turbo Decoder only, no RNN!'
+
     if '--help' in n_inp:
-        with open('evaluate_rnn.md','r') as fin:
+        with open('./manuals/evaluate_commpy.md','r') as fin:
             print fin.read()
         exit_now = True
         sys.exit()
-
+    print '[Turbo Decoder] Evaluate Commpy Turbo Decoder only, no RNN!'
     if '-block_len' in n_inp:
         ind1      = n_inp.index('-block_len')
         block_len = int(n_inp[ind1+1])

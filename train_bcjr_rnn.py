@@ -24,9 +24,8 @@ if __name__ == '__main__':
     # Arguments
     n_inp = sys.argv[1:]
     if '--help' in n_inp:
-        with open('manual.md','r') as fin:
+        with open('./manuals/train_bcjr_rnn.md','r') as fin:
             print fin.read()
-        exit_now = True
         sys.exit()
 
     print '[BCJR] Training BCJR-like RNN'
@@ -189,7 +188,7 @@ if __name__ == '__main__':
             ind1            = n_inp.index('-num_block_train')
             num_block_train = int(n_inp[ind1+1])
         else:
-            num_block_train = 10000
+            num_block_train = 2000
 
         if '-num_block_test' in n_inp:
             ind1           = n_inp.index('-num_block_test')
@@ -216,11 +215,11 @@ if __name__ == '__main__':
         codec  = [trellis1, trellis2, interleaver]
 
         bcjr_inputs_train, bcjr_outputs_train = generate_bcjr_example(num_block_train, block_len,
-                                                                      codec, is_save = True,num_iteration = 6,
+                                                                      codec, is_save = False,num_iteration = 6,
                                                                       train_snr_db = train_snr, save_path = './tmp/')
 
         bcjr_inputs_test,  bcjr_outputs_test  = generate_bcjr_example(num_block_test, block_len,
-                                                                      codec, is_save = True, num_iteration = 6,
+                                                                      codec, is_save = False, num_iteration = 6,
                                                                       train_snr_db = train_snr, save_path = './tmp/')
 
     if '-rnn_direction' in n_inp:
