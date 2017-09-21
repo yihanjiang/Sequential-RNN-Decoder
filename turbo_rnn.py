@@ -190,7 +190,7 @@ class Interleave(Layer):
 
 
 def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_saved_path='default',
-               learning_rate = 0.001, num_hidden_unit = 200, **kwargs):
+               learning_rate = 0.001, num_hidden_unit = 200, rnn_type = 'lstm', **kwargs):
     '''
     #network_saved_path = './best_bcjr.h5'
     #network_saved_path = './tmp/yihan_lstm0.243249529809.h5'  # deep prior learning
@@ -206,7 +206,7 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     else:
         network_saved_path = network_saved_path
 
-    rnn_type    = 'lstm'    #'gru', 'lstm'
+    #rnn_type    = 'lstm'    #'gru', 'lstm'
     print '[RNN Model] using model type', rnn_type
     print '[RNN Model] using model path', network_saved_path
     ######################################

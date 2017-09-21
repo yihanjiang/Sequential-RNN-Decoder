@@ -150,6 +150,13 @@ if __name__ == '__main__':
 
     print '[Setting Parameters]RNN Number of hidden unit ', num_hidden_unit
 
+    if '-rnn_type' in n_inp:
+        ind1      = n_inp.index('-rnn_type')
+        rnn_type = str(n_inp[ind1+1])
+    else:
+        rnn_type = 'lstm'
+
+    print '[Setting Parameters]RNN Number of hidden unit ', num_hidden_unit
 
 
     ##########################################
@@ -177,7 +184,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    model = load_model(network_saved_path = model_path, block_len=block_len,
+    model = load_model(network_saved_path = model_path, block_len=block_len,rnn_type=rnn_type,
                        interleave_array = p_array, dec_iter_num = dec_iter_num, num_hidden_unit=num_hidden_unit)
     end_time = time.time()
     print '[RNN decoder]loading RNN model takes ', str(end_time-start_time), ' secs'   # typically longer than 5 mins, since it is deep!
@@ -220,7 +227,6 @@ if __name__ == '__main__':
         turbo_res_bler.append(bler_err_rate)
         end_time = time.time()
         print '[testing] runnig time is', str(end_time-start_time)
-
 
     print '[Result Summary] SNRS is', SNRS
     print '[Result Summary] Turbo RNN BER is', turbo_res_ber

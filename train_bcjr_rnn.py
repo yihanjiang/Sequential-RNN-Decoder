@@ -358,17 +358,19 @@ if __name__ == '__main__':
     ###########################
     # Start Training
     ###########################
+    print '[BCJR][Warning] Train from scratch, not loading weight!'
     #model.load_weights(starting_model_path)
 
     model.fit(x=X_input, y=X_target, batch_size=train_batch_size,
               epochs=num_epoch, validation_split = 0.1)#validation_data=(test_tx, X_test))  # starts training
 
-    model_des = codec_type +'_'+ num_hunit_rnn+'_' + rnn_type+'_' + rnn_direction+'_' +block_len
-    model.save_weights('./tmp/bcjr_train'+model_des+identity+'_1.h5')
-    print '[BCJR] Saved Model at', './tmp/bcjr_train'+model_des+identity+'_1.h5'
+    model_des = str(codec_type) +'_'+ str(num_hunit_rnn)+'_' + str(rnn_type)+'_' + str(rnn_direction)+'_' +str(block_len)
+    model.save_weights('./tmp/bcjr_train'+str(model_des)+str(identity)+'_1.h5')
+    print '[BCJR] Saved Model at', './tmp/bcjr_train'+str(model_des)+str(identity)+'_1.h5'
 
     model.fit(x=X_input, y=X_target, batch_size=train_batch_size,
               epochs=num_epoch, validation_split = 0.1)#validation_data=(test_tx, X_test))  # starts training
 
-    model.save_weights('./tmp/bcjr_train'+model_des+identity+'_1.h5')
-    print '[BCJR] Saved Model at', './tmp/bcjr_train'+model_des+identity+'_2.h5'
+    model.save_weights('./tmp/bcjr_train'+str(model_des)+str(identity)+'_2.h5')
+    print '[BCJR] Saved Model at', './tmp/bcjr_train'+str(model_des)+str(identity)+'_2.h5'
+
