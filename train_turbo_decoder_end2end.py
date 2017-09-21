@@ -164,6 +164,14 @@ if __name__ == '__main__':
 
     print '[Setting Parameters]RNN Number of hidden unit ', num_hidden_unit
 
+    if '-rnn_type' in n_inp:
+        ind1      = n_inp.index('-rnn_type')
+        rnn_type = str(n_inp[ind1+1])
+    else:
+        rnn_type = 'lstm'
+
+    print '[Setting Parameters]RNN type is  ', rnn_type
+
     ##########################################
     # Setting Up Codec
     ##########################################
@@ -189,7 +197,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    model = load_model(learning_rate=learning_rate,
+    model = load_model(learning_rate=learning_rate,rnn_type=rnn_type, block_len=block_len,
                        network_saved_path = starting_model_path, num_hidden_unit=num_hidden_unit,
                        interleave_array = p_array, dec_iter_num = dec_iter_num)
 

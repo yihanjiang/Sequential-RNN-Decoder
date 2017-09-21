@@ -71,6 +71,7 @@ if __name__ == '__main__':
     if '-network_model_path' in n_inp:
         ind1      = n_inp.index('-network_model_path')
         starting_model_path = str(n_inp[ind1+1])
+        is_pretrained = True
     else:
         starting_model_path = './tmp/bcjr_train100_truePostLL_0.261448005038_1.h5'
 
@@ -298,6 +299,21 @@ if __name__ == '__main__':
                         return_sequences=True, dropout=dropout_rate)(x)
                 x = BatchNormalization()(x)
 
+    elif rnn_type == 'simple-rnn':
+        x = Rx_received
+        for layer in range(num_rnn_layer):
+            if rnn_direction == 'bd':
+                x = Bidirectional(SimpleRNN(units=num_hunit_rnn, activation='tanh',
+                                      kernel_regularizer=regularizer,recurrent_regularizer=regularizer,
+                                      return_sequences=True, dropout=dropout_rate))(x)
+                x = BatchNormalization()(x)
+            else:
+                x = SimpleRNN(units=num_hunit_rnn, activation='tanh',
+                        kernel_regularizer=regularizer,recurrent_regularizer=regularizer,
+                        return_sequences=True, dropout=dropout_rate)(x)
+                x = BatchNormalization()(x)
+
+
     else:
         print 'not supported'
         sys.exit()
@@ -358,8 +374,13 @@ if __name__ == '__main__':
     ###########################
     # Start Training
     ###########################
-    print '[BCJR][Warning] Train from scratch, not loading weight!'
-    #model.load_weights(starting_model_path)
+
+
+    if is_pretrained:
+        model.load_weights(starting_model_path)
+        print '[BCJR][Warning] Loaded Some init weight', starting_model_path
+    else:
+        print '[BCJR][Warning] Train from scratch, not loading weight!'
 
     model.fit(x=X_input, y=X_target, batch_size=train_batch_size,
               epochs=num_epoch, validation_split = 0.1)#validation_data=(test_tx, X_test))  # starts training

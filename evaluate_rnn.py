@@ -156,7 +156,7 @@ if __name__ == '__main__':
     else:
         rnn_type = 'lstm'
 
-    print '[Setting Parameters]RNN Number of hidden unit ', num_hidden_unit
+    print '[Setting Parameters]RNN type is  ', rnn_type
 
 
     ##########################################
