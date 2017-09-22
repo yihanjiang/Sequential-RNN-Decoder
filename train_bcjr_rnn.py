@@ -74,6 +74,7 @@ if __name__ == '__main__':
         is_pretrained = True
     else:
         starting_model_path = './tmp/bcjr_train100_truePostLL_0.261448005038_1.h5'
+        is_pretrained = False
 
     print '[BCJR Setting Parameters][Not functional] Network starting path is ', starting_model_path
 

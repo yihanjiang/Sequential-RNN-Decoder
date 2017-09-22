@@ -235,7 +235,7 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
         f2 = BatchNormalization(name='batch_normalization_1')
         f3 = Bidirectional(GRU(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
         f4 = BatchNormalization(name='batch_normalization_2')
-    else:
+    else: #SimpleRNN
         f1 = Bidirectional(SimpleRNN(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
         f2 = BatchNormalization(name='batch_normalization_1')
         f3 = Bidirectional(SimpleRNN(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))

@@ -28,12 +28,13 @@ from utils import corrupt_signal, build_rnn_data_feed
 
 class Interpret(object):
     def __init__(self,network_saved_path,
-                 num_block = 100,
+                 num_block = 100,rnn_type = 'lstm',
                  block_len = 100,num_hidden_unit = 200, is_ll = True):
 
         self.block_len = block_len
         self.num_block = num_block
         self.network_saved_path = network_saved_path
+        self.rnn_type = rnn_type
         if is_ll:
             self.model  = self._load_model()
 
@@ -53,7 +54,7 @@ class Interpret(object):
         else:
             network_saved_path = self.network_saved_path
 
-        rnn_type    = 'lstm'    #'gru', 'lstm'
+        rnn_type    = self.rnn_type   #'gru', 'lstm'
         print '[BCJR RNN Interpret] using model type', rnn_type
         print '[BCJR RNN Interpret] using model path', network_saved_path
 
@@ -85,7 +86,16 @@ class Interpret(object):
         optimizer= keras.optimizers.adam(lr=0.001, clipnorm=1.0)               # not useful
         model.compile(optimizer=optimizer,loss='mean_squared_error')
         #print model.summary()
+        #
+
         model.load_weights(network_saved_path, by_name=True)
+        # if rnn_type == 'lstm':
+        #     model.load_weights(network_saved_path, by_name=True)
+        # else:
+        #     model.load_weights(network_saved_path)
+        #     model.save_weights('./tmp/gruuu.h5')
+
+
 
         return model
 
@@ -370,19 +380,19 @@ def likelihood_1():
     ###############################################
     # Input Parameters
     ###############################################
-    label1 = 't-dist v3 trained '
+    label1 = 'Hyeji Trained BCJR'
     label2 = 'radar trained '
     label3 = 'awgn trained'
 
-    network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
+    network_saved_path_1 = './model_zoo/radar_bcjr_trained/hyeji_reformat_0921.h5'
     network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 1000
-    sigma_set = 0.0
+    num_block = 100
+    sigma_set = 1.0
 
-    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
+    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block, rnn_type = 'gru')
 
     map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = sigma_set,
                                                                   radar_noise_power = 10, is_compute_map=True,
