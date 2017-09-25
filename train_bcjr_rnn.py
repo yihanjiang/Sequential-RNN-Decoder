@@ -342,7 +342,7 @@ if __name__ == '__main__':
     print bcjr_inputs_train.shape
     print bcjr_outputs_train.shape
 
-    # output is not sum
+    # output is not sum, need to debug here.
     if 1==1:
         target_train_select = bcjr_outputs_train[:,:,0] + bcjr_inputs_train[:,:,2]
     else:

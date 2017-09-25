@@ -64,6 +64,7 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
 
         weighted_sys = 2*sys_symbols*1.0/noise_variance # Is gonna be used in the final step of decoding.
         weighted_sys_int = interleaver.interlv(weighted_sys)
+
         for turbo_iteration_idx in range(num_iteration-1):
             L_int_1 = interleaver.deinterlv(L_ext_2)
             # MAP 1
@@ -82,9 +83,9 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
             # MAP 2
             L_int_2 = interleaver.interlv(L_ext_1)
 
-            [L_2, decoded_bits] = turbo.map_decode(sys_symbols_i, non_sys_symbols_2,
+            [L_ext_2, decoded_bits] = turbo.map_decode(sys_symbols_i, non_sys_symbols_2,
                                              trellis, noise_variance, L_int_2, 'compute')
-            L_ext_2 = L_2 - L_int_2
+            L_ext_2 -=  L_int_2
             L_ext_2 -=  weighted_sys_int
             # ADD Training Examples
             bcjr_inputs[2*turbo_iteration_idx+1,block_idx,:,:] = np.concatenate([sys_symbols_i.reshape(block_len,1),
@@ -97,7 +98,7 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
         L_int_1 = interleaver.deinterlv(L_ext_2)
         [L_ext_1, decoded_bits] = turbo.map_decode(sys_symbols, non_sys_symbols_1,
                                              trellis, noise_variance, L_int_1, 'compute')
-        L_ext_1 = L_ext_1 - L_int_1
+        L_ext_1 -= L_int_1
         L_ext_1 -= weighted_sys
          # ADD Training Examples
 

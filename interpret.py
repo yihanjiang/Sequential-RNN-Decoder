@@ -856,7 +856,7 @@ def ber_snr_range():
     ###############################################
     network_saved_path = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
     #network_saved_path = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_1.h5'
-    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=1000, is_ll=False)
+    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=5000, is_ll=False)
 
     radar_bit_pos = 50
 
@@ -868,10 +868,11 @@ def ber_snr_range():
     plt.title('Compare BER between RNN/Turbo')
     plt.yscale('log')
     p1, = plt.plot(map_ber_non_bursty, 'y', label ='Turbo Non Bursty' )
-    p2, = plt.plot(rnn_ber_non_bursty, 'g', label ='RNN Non Bursty')
+    #p2, = plt.plot(rnn_ber_non_bursty, 'g', label ='RNN Non Bursty')
     p3, = plt.plot(map_ber_bursty,     'b', label ='Turbo Bursty')
-    p4, = plt.plot(rnn_ber_bursty,     'k', label ='RNN Bursty')
-    plt.legend(handles = [p1, p2, p3, p4])
+    #p4, = plt.plot(rnn_ber_bursty,     'k', label ='RNN Bursty')
+    plt.legend(handles = [p1, p3])
+    #plt.legend(handles = [p1, p2, p3, p4])
     plt.show()
 
 
@@ -881,10 +882,10 @@ if __name__ == '__main__':
 
     # User Case 2, likelihood on RNN models. Compare the output scale.
     #likelihood_radartrained_vs_awgntrained()
-    likelihood_1()
+    #likelihood_1()
 
     # User Case 3, ber on bursty noise. Compare stacked RNN decoder and Turbo Decoder's BER bit-wise
-    #ber_snr_range()
+    ber_snr_range()
 
     # User Case 4, ber on bursty noise over RNN models.
     #ber_rnn_compare()

@@ -188,8 +188,7 @@ class Interleave(Layer):
             return None
         return masks[1]
 
-
-def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_saved_path='default',
+def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_saved_path='default', num_layer = 2,
                learning_rate = 0.001, num_hidden_unit = 200, rnn_type = 'lstm', **kwargs):
     '''
     #network_saved_path = './best_bcjr.h5'
@@ -261,14 +260,24 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
         return xx
 
     def takeLL(x):
-        x1_out = x[:,:,0]
-        return tf.reshape(x1_out-x[:,:,3],[tf.shape(x1_out)[0],block_len,1])
+        #x1_out = x[:,:,0]
+        return tf.reshape(x[:,:,0]-x[:,:,3],[tf.shape(x[:,:,0])[0],block_len,1])
+        #return tf.reshape(x[:,:,0],[tf.shape(x)[0],block_len,1])
+        #return x
 
     def concat(x):
         return K.concatenate(x)
 
     def subtr(x2):
-        x2_out = f5(f4(f3(f2(f1(x2)))))
+        # x2_out = f5(f4(f3(f2(f1(x2)))))
+        # return x2_out
+        if num_layer == 2:
+            x2_out = f5(f4(f3(f2(f1(x2)))))
+        elif num_layer == 1:
+            x2_out = f5(f2(f1(x2)))
+        else:
+            print 'other layer not supported!'
+            return
         x2_temp = Lambda(concat)([x2_out, x2])
         x2 = Lambda(takeLL)(x2_temp)
         return x2
@@ -291,7 +300,6 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     x2 = subtr(x2)#x2 = f5(f4(f3(f2(f1(x2)))))
     x2 = DeInterleave(interleave_array=interleave_array)(x2)
 
-
     for dec_iter in range(dec_iter_num-2):
         x3 = Lambda(concat)([x_input_1, x2])
         x3 = subtr(x3)#x3 = f5(f4(f3(f2(f1(x3)))))
@@ -307,7 +315,12 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     x3 = Interleave(interleave_array=interleave_array)(x3)
 
     x4 = Lambda(concat)([x_input_2, x3])
-    x4 = f6(f4(f3(f2(f1(x4)))))
+
+    if num_layer == 2:
+        x4 = f6(f4(f3(f2(f1(x4)))))
+    elif num_layer == 1:
+        x4 = f6(f2(f1(x4)))
+
     x4 = DeInterleave(interleave_array=interleave_array)(x4)
 
     predictions = x4

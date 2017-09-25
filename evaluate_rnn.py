@@ -158,6 +158,13 @@ if __name__ == '__main__':
 
     print '[Setting Parameters]RNN type is  ', rnn_type
 
+    if '-num_layer' in n_inp:
+        ind1      = n_inp.index('-num_layer')
+        num_layer = int(n_inp[ind1+1])
+    else:
+        num_layer = 2
+
+    print '[Setting Parameters]RNN number of layer is  ', num_layer
 
     ##########################################
     # Setting Up Codec
@@ -184,7 +191,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
 
-    model = load_model(network_saved_path = model_path, block_len=block_len,rnn_type=rnn_type,
+    model = load_model(network_saved_path = model_path, block_len=block_len,rnn_type=rnn_type, num_layer= num_layer,
                        interleave_array = p_array, dec_iter_num = dec_iter_num, num_hidden_unit=num_hidden_unit)
     end_time = time.time()
     print '[RNN decoder]loading RNN model takes ', str(end_time-start_time), ' secs'   # typically longer than 5 mins, since it is deep!
