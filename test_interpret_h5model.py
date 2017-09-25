@@ -201,5 +201,18 @@ def level2():
     # plt.show()
 
 if __name__ == "__main__":
-    level2()
-    level1()
+    # level2()
+    # level1()
+    import h5py
+    hdf5_file_name = './model_zoo/bcjr_train_0925/bcjr_traindefault_200_simple-rnn_sd_1000.570911494253_2.h5'
+    file    = h5py.File(hdf5_file_name, 'r')
+
+    print 'running on layer 2'
+
+    print file.keys()
+
+    print file['bidirectional_1']['bidirectional_1']['forward_bidirectional_1'].keys()
+
+    bias_matrix   = file['bidirectional_2']['bidirectional_2']['forward_bidirectional_2']['bias:0'][:]
+    recur_matrix  = file['bidirectional_2']['bidirectional_2']['forward_bidirectional_2']['recurrent_kernel:0'][:, :]
+    kernel_matrix = file['bidirectional_2']['bidirectional_2']['forward_bidirectional_2']['kernel:0'][:, :]

@@ -158,6 +158,15 @@ if __name__ == '__main__':
 
     print '[Setting Parameters]RNN type is  ', rnn_type
 
+    if '-rnn_direction' in n_inp:
+        ind1      = n_inp.index('-rnn_direction')
+        rnn_direction = str(n_inp[ind1+1])
+    else:
+        rnn_direction = 'bd'
+
+    print '[Setting Parameters]RNN direction is  ', rnn_direction
+
+
     if '-num_layer' in n_inp:
         ind1      = n_inp.index('-num_layer')
         num_layer = int(n_inp[ind1+1])
@@ -186,12 +195,25 @@ if __name__ == '__main__':
     codec  = [trellis1, trellis2, interleaver]
 
     ##########################################
+    # Systematic Bit Channel Reliability
+    ##########################################
+    if '--add_sys' in n_inp:
+        add_sys = True
+        last_layer_sigmoid = False
+    else:
+        add_sys = False
+        last_layer_sigmoid = True
+
+    print '[helper] add sys ', add_sys, 'last layer sigmoid ', last_layer_sigmoid
+
+    ##########################################
     # Setting Up RNN Model
     ##########################################
-
     start_time = time.time()
 
     model = load_model(network_saved_path = model_path, block_len=block_len,rnn_type=rnn_type, num_layer= num_layer,
+                       rnn_direction = rnn_direction,
+                       last_layer_sigmoid = last_layer_sigmoid,
                        interleave_array = p_array, dec_iter_num = dec_iter_num, num_hidden_unit=num_hidden_unit)
     end_time = time.time()
     print '[RNN decoder]loading RNN model takes ', str(end_time-start_time), ' secs'   # typically longer than 5 mins, since it is deep!
@@ -224,9 +246,21 @@ if __name__ == '__main__':
         X_feed_test, X_message_test = build_rnn_data_feed(num_block, block_len, noiser, codec)
         pd       = model.predict(X_feed_test,batch_size = 100)
 
+        if add_sys:
+            weighted_sys = 2*X_feed_test[:,:,0]*1.0/(test_sigmas[idx]**2)
+            weighted_sys = weighted_sys.reshape((weighted_sys.shape[0], weighted_sys.shape[1], 1))
+            if last_layer_sigmoid == False:
+                decoded_bits = (pd + weighted_sys > 0)
+            else:
+                print 'not supported, halt!'
+                sys.exit()
+        else:
+            decoded_bits = np.round(pd)
+
+
         # Compute BER and BLER
-        ber_err_rate  = sum(sum(sum(abs(np.round(pd)-X_message_test))))*1.0/(X_message_test.shape[0]*X_message_test.shape[1])# model.evaluate(X_feed_test, X_message_test, batch_size=10)
-        tp0 = (abs(np.round(pd)-X_message_test)).reshape([X_message_test.shape[0],X_message_test.shape[1]])
+        ber_err_rate  = sum(sum(sum(abs(decoded_bits-X_message_test))))*1.0/(X_message_test.shape[0]*X_message_test.shape[1])# model.evaluate(X_feed_test, X_message_test, batch_size=10)
+        tp0 = (abs(decoded_bits-X_message_test)).reshape([X_message_test.shape[0],X_message_test.shape[1]])
         bler_err_rate = sum(np.sum(tp0,axis=1)>0)*1.0/(X_message_test.shape[0])
 
         print '[testing] This is SNR', SNRS[idx] , 'RNN BER ', ber_err_rate, 'RNN BLER', bler_err_rate
