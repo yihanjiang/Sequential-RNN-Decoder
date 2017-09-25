@@ -189,7 +189,7 @@ class Interleave(Layer):
         return masks[1]
 
 def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_saved_path='default', num_layer = 2,
-               learning_rate = 0.001, num_hidden_unit = 200, rnn_type = 'lstm', **kwargs):
+               learning_rate = 0.001, num_hidden_unit = 200, rnn_type = 'lstm',rnn_direction = 'bd', **kwargs):
     '''
     #network_saved_path = './best_bcjr.h5'
     #network_saved_path = './tmp/yihan_lstm0.243249529809.h5'  # deep prior learning
@@ -224,21 +224,43 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     ####################################################
     # Define Model
     ####################################################
-    if rnn_type == 'lstm':
-        f1 = Bidirectional(LSTM(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
-        f2 = BatchNormalization(name='batch_normalization_1')
-        f3 = Bidirectional(LSTM(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
-        f4 = BatchNormalization(name='batch_normalization_2')
-    elif rnn_type == 'gru':
-        f1 = Bidirectional(GRU(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
-        f2 = BatchNormalization(name='batch_normalization_1')
-        f3 = Bidirectional(GRU(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
-        f4 = BatchNormalization(name='batch_normalization_2')
-    else: #SimpleRNN
-        f1 = Bidirectional(SimpleRNN(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
-        f2 = BatchNormalization(name='batch_normalization_1')
-        f3 = Bidirectional(SimpleRNN(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
-        f4 = BatchNormalization(name='batch_normalization_2')
+    if rnn_direction == 'bd':
+        if rnn_type == 'lstm':
+            f1 = Bidirectional(LSTM(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
+            f2 = BatchNormalization(name='batch_normalization_1')
+            f3 = Bidirectional(LSTM(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
+            f4 = BatchNormalization(name='batch_normalization_2')
+        elif rnn_type == 'gru':
+            f1 = Bidirectional(GRU(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
+            f2 = BatchNormalization(name='batch_normalization_1')
+            f3 = Bidirectional(GRU(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
+            f4 = BatchNormalization(name='batch_normalization_2')
+        else: #SimpleRNN
+            f1 = Bidirectional(SimpleRNN(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
+            f2 = BatchNormalization(name='batch_normalization_1')
+            f3 = Bidirectional(SimpleRNN(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0))
+            f4 = BatchNormalization(name='batch_normalization_2')
+
+    elif rnn_direction == 'sd':
+        if rnn_type == 'lstm':
+            f1 = LSTM(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0)
+            f2 = BatchNormalization(name='batch_normalization_1')
+            f3 = LSTM(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0)
+            f4 = BatchNormalization(name='batch_normalization_2')
+        elif rnn_type == 'gru':
+            f1 = GRU(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0)
+            f2 = BatchNormalization(name='batch_normalization_1')
+            f3 = GRU(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0)
+            f4 = BatchNormalization(name='batch_normalization_2')
+        else: #SimpleRNN
+            f1 = SimpleRNN(name='bidirectional_1', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0)
+            f2 = BatchNormalization(name='batch_normalization_1')
+            f3 = SimpleRNN(name='bidirectional_2', units=num_hidden_unit, activation='tanh', return_sequences=True, dropout=1.0)
+            f4 = BatchNormalization(name='batch_normalization_2')
+    else:
+        print '[RNN Model]RNN direction not supported, exit'
+        import sys
+        sys.exit()
 
     f5 = TimeDistributed(Dense(1),name='time_distributed_1')
     f6 = TimeDistributed(Dense(1,activation='sigmoid'),name='time_distributed_sigmoid')
