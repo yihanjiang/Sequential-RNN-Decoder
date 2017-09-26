@@ -357,7 +357,7 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     model.compile(optimizer=optimizer,loss='mean_squared_error', metrics=[errors])
     model.load_weights(network_saved_path, by_name=True)
 
-    print model.summary()
+    #print model.summary()
 
     layer_from = model.get_layer('time_distributed_1')
     weights = layer_from.get_weights()

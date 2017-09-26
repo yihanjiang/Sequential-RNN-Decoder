@@ -328,19 +328,19 @@ if __name__ == '__main__':
     model = Model(inputs=inputs, outputs=predictions)
     optimizer= keras.optimizers.adam(lr=learning_rate)
     model.compile(optimizer=optimizer,loss='mean_squared_error', metrics=[errors])
-    print(model.summary())
+    #print(model.summary())
 
     ######################
     # Build Data Format
     #####################
-    print bcjr_inputs_train.shape
-    print bcjr_outputs_train.shape
+    # print bcjr_inputs_train.shape
+    # print bcjr_outputs_train.shape
 
     bcjr_inputs_train   = bcjr_inputs_train.reshape((-1, block_len, input_feature_num))
     bcjr_outputs_train  = bcjr_outputs_train.reshape((-1,  block_len, 1))
 
-    print bcjr_inputs_train.shape
-    print bcjr_outputs_train.shape
+    # print bcjr_inputs_train.shape
+    # print bcjr_outputs_train.shape
 
     # output is not sum, need to debug here.
     if 1==1:
