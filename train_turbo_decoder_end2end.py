@@ -1,7 +1,6 @@
 __author__ = 'yihanjiang'
 
 from utils import build_rnn_data_feed
-
 from turbo_rnn import load_model
 
 import sys
@@ -94,7 +93,7 @@ if __name__ == '__main__':
 
     if '-train_snr' in n_inp:
         ind1      = n_inp.index('-train_snr')
-        train_snr = int(n_inp[ind1+1])
+        train_snr = float(n_inp[ind1+1])
     else:
         train_snr = -1.0
 
@@ -142,7 +141,7 @@ if __name__ == '__main__':
 
     if '-num_epoch' in n_inp:
         ind1      = n_inp.index('-num_epoch')
-        num_epoch = float(n_inp[ind1+1])
+        num_epoch = int(n_inp[ind1+1])
     else:
         num_epoch = 10
 
