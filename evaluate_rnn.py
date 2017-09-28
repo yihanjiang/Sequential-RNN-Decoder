@@ -113,10 +113,10 @@ if __name__ == '__main__':
 
     if '-snr_range' in n_inp:
         ind1      = n_inp.index('-snr_range')
-        snr_start = int(n_inp[ind1+1])
-        snr_stop  = int(n_inp[ind1+2])
+        snr_start = float(n_inp[ind1+1])
+        snr_stop  = float(n_inp[ind1+2])
     else:
-        snr_start = -1
+        snr_start = -1.5
         snr_stop  = 2
 
     print '[Setting Parameters] SNR in dB range from ', snr_start,' to ', snr_stop, 'dB'
@@ -125,7 +125,7 @@ if __name__ == '__main__':
         ind1      = n_inp.index('-snr_points')
         snr_points = int(n_inp[ind1+1])
     else:
-        snr_points = 10
+        snr_points = 8
 
     print '[Setting Parameters] SNR points in total: ', snr_points
 
@@ -225,18 +225,15 @@ if __name__ == '__main__':
     # Setting Up Channel & SNR range
     ##########################################
     SNR_dB_start_Eb = snr_start
-    SNR_dB_stop_Eb  = snr_stop
-    SNR_points      = snr_points
+    SNR_dB_stop_Eb = snr_stop
+    SNR_points = snr_points
 
-    SNR_dB_start_Es = SNR_dB_start_Eb + 10*np.log10(float(block_len)/float(2*block_len))
-    SNR_dB_stop_Es = SNR_dB_stop_Eb + 10*np.log10(float(block_len)/float(2*block_len))
+    snr_interval = (SNR_dB_stop_Eb - SNR_dB_start_Eb)* 1.0 /  (SNR_points-1)
+    SNRS_dB = [snr_interval* item + SNR_dB_start_Eb for item in range(SNR_points)]
+    SNRS_dB_Es = [item + 10*np.log10(float(num_block)/float(num_block*2.0)) for item in SNRS_dB]
+    test_sigmas = np.array([np.sqrt(1/(2*10**(float(item)/float(10)))) for item in SNRS_dB_Es])
 
-    sigma_start = np.sqrt(1/(2*10**(float(SNR_dB_start_Es)/float(10))))
-    sigma_stop = np.sqrt(1/(2*10**(float(SNR_dB_stop_Es)/float(10))))
-
-    # Testing sigmas for Direct link, Tx to Relay, Relay to Rx.
-    test_sigmas = np.linspace(sigma_start, sigma_stop, SNR_points, dtype = 'float32')
-    SNRS = -10*np.log10(test_sigmas**2)
+    SNRS = SNRS_dB
     print '[testing] SNR range in dB ', SNRS
 
     turbo_res_ber = []
