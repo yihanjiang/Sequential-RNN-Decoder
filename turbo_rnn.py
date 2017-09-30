@@ -1,10 +1,5 @@
 __author__ = 'yihanjiang'
 
-# force to use CPU, for AWS issues
-import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
 import numpy as np
 import math
 import tensorflow as tf

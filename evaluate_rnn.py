@@ -1,9 +1,5 @@
 __author__ = 'yihanjiang'
 
-import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
 from turbo_rnn import load_model
 from utils import build_rnn_data_feed
 

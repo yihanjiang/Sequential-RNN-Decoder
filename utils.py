@@ -160,6 +160,7 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
         '''
         TBD, noise model shall be open to other user, for them to train their own decoder.
         '''
+
         print '[Debug] Customize noise model not supported yet'
     else:  # awgn
         pass
@@ -220,6 +221,8 @@ def snr_db2sigma(train_snr):
 def snr_sigma2db(sigma_snr):
     SNR          = -10*np.log10(sigma_snr**2)
     return SNR
+
+
 
 
 if __name__ == '__main__':

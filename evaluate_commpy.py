@@ -3,7 +3,7 @@ __author__ = 'yihanjiang'
 This module is for future speedup of Commpy.
 '''
 
-from utils import build_rnn_data_feed, corrupt_signal
+from utils import  corrupt_signal, snr_db2sigma
 
 import sys
 import numpy as np
@@ -137,6 +137,17 @@ if __name__ == '__main__':
 
     print '[Setting Parameters] SNR points in total: ', snr_points
 
+    if '-fix_var' in n_inp:
+        is_fixed_var = True
+        ind1      = n_inp.index('-fix_var')
+        fix_var_db = float(n_inp[ind1+1])
+    else:
+        is_fixed_var = False
+        fix_var_db = -1.0
+
+    fix_var = snr_db2sigma(fix_var_db)
+    print '[Setting Parameters] setting fixed variance', is_fixed_var, 'with variance in dB', fix_var_db, 'with variance', fix_var
+
     if '-codec_type' in n_inp:
         ind1      = n_inp.index('-codec_type')
         codec_type = str(n_inp[ind1+1])
@@ -163,6 +174,8 @@ if __name__ == '__main__':
     p_array = interleaver.p_array
     print '[BCJR Example Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
     codec  = [trellis1, trellis2, interleaver]
+
+
 
     ##########################################
     # Setting Up Channel & SNR range
@@ -196,7 +209,12 @@ if __name__ == '__main__':
         par2_r = corrupt_signal(par2, noise_type =noise_type, sigma = test_sigmas[idx],
                                vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
 
-        decoded_bits = turbo.hazzys_turbo_decode(sys_r, par1_r, par2_r, trellis1, test_sigmas[idx]**2, dec_iter_num, interleaver, L_int = None)
+        #decoded_bits = turbo.hazzys_turbo_decode(sys_r, par1_r, par2_r, trellis1, test_sigmas[idx]**2, dec_iter_num, interleaver, L_int = None)
+        if is_fixed_var:
+            decoded_bits = turbo.hazzys_turbo_decode(sys_r, par1_r, par2_r, trellis1, fix_var**2, dec_iter_num, interleaver, L_int = None)
+        else:
+            decoded_bits = turbo.hazzys_turbo_decode(sys_r, par1_r, par2_r, trellis1, test_sigmas[idx]**2, dec_iter_num, interleaver, L_int = None)
+
         num_bit_errors = hamming_dist(message_bits, decoded_bits)
 
         return num_bit_errors
