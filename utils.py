@@ -2,8 +2,7 @@ __author__ = 'yihanjiang'
 '''
 This is util functions of the decoder
 SHall involve:
-(1) Adding noise
-(2) Parallel Generating Turbo Code?
+(1) Parallel Generating Turbo Code?
 '''
 
 import numpy as np
@@ -88,7 +87,60 @@ def corrupt_signal(input_signal, noise_type, sigma = 1.0,
         # corrupted_signal = 2.0*input_signal-1.0 + noise
         # corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-denoise_thd, threshmax=denoise_thd, newval=0.0)
 
+    elif noise_type == 'hyeji_bursty':
+        bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
+        add_pos     = np.random.choice([0.0, 1.0], data_shape, p=[1 - radar_prob, radar_prob])
+        corrupted_signal = bpsk_signal + np.random.normal(0, radar_power, size = data_shape ) * add_pos
+
+        #
+        # burst = np.random.randint(0, data_shape[0], int(radar_prob*data_shape[0]))
+        # bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
+        # corrupt_signal[burst] = bpsk_signal[burst] + radar_power * np.random.standard_normal(data_shape)
+
+    elif noise_type == 'hyeji_bursty+denoise':
+        bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
+        add_pos     = np.random.choice([0.0, 1.0], data_shape, p=[1 - radar_prob, radar_prob])
+        corrupted_signal = bpsk_signal + np.random.normal(0, radar_power, size = data_shape ) * add_pos
+        corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-denoise_thd, threshmax=denoise_thd, newval=0.0)
+
+    elif noise_type == 'mixture-normalized':
+
+        ref_snr = 0
+        ref_sigma= 10**(-ref_snr*1.0/20)# reference is always 0dB.
+
+        noise = sigma * np.random.standard_normal(data_shape) # Define noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
+
+        bpsk_signal_ref = 2.0*input_signal-1.0 + ref_sigma * np.random.standard_normal(data_shape)
+        bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
+        pstate1 = 0.5
+        add_pos     = np.random.choice([0, 1.0], data_shape, p=[pstate1,1-pstate1])
+        add_poscomp = np.ones(data_shape) - abs(add_pos)
+
+        corrupted_signal = bpsk_signal_ref * add_poscomp *1.0/(ref_sigma**2) + bpsk_signal * add_pos *1.0/(sigma**2)
+
+        return corrupted_signal
+
+    elif noise_type == 'mixture':
+
+        ref_snr = 0
+        ref_sigma= 10**(-ref_snr*1.0/20)# reference is always 0dB.
+
+        noise = sigma * np.random.standard_normal(data_shape) # Define noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
+
+        bpsk_signal_ref = 2.0*input_signal-1.0 + ref_sigma * np.random.standard_normal(data_shape)
+        bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
+        pstate1 = 0.5
+        add_pos     = np.random.choice([0, 1.0], data_shape, p=[pstate1,1-pstate1])
+        add_poscomp = np.ones(data_shape) - abs(add_pos)
+
+        corrupted_signal = bpsk_signal_ref * add_poscomp *1.0 + bpsk_signal * add_pos *1.0
+
+        return corrupted_signal
+
     else:
+        print '[Warning][Noise Generator]noise_type noty specified!'
         noise = sigma * np.random.standard_normal(data_shape)
         corrupted_signal = 2.0*input_signal-1.0 + noise
 
@@ -148,14 +200,15 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
 
     if noise_type == 't-dist':
         vv = noiser[2]
-    elif noise_type == 'awgn+radar':
+    elif noise_type == 'awgn+radar' or noise_type == 'hyeji_bursty':
         radar_power = noiser[3]
         radar_prob  = noiser[4]
 
-    elif noise_type == 'awgn+radar+denoise':
+    elif noise_type == 'awgn+radar+denoise' or noise_type == 'hyeji_bursty+denoise':
         radar_power = noiser[3]
         radar_prob  = noiser[4]
         denoise_thd = noiser[5]
+
     elif noise_type == 'customize':
         '''
         TBD, noise model shall be open to other user, for them to train their own decoder.

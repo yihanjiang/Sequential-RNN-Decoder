@@ -29,17 +29,17 @@ from utils import corrupt_signal, build_rnn_data_feed
 class Interpret(object):
     def __init__(self,network_saved_path,
                  num_block = 100,rnn_type = 'lstm',
-                 block_len = 100,num_hidden_unit = 200, is_ll = True):
+                 block_len = 100,num_hidden_unit = 200, is_ll = True, no_bn = False):
 
         self.block_len = block_len
         self.num_block = num_block
         self.network_saved_path = network_saved_path
         self.rnn_type = rnn_type
         if is_ll:
-            self.model  = self._load_model()
+            self.model  = self._load_model(no_bn = no_bn)
 
 
-    def _load_model(self,  num_hidden_unit = 200):
+    def _load_model(self,  num_hidden_unit = 200, no_bn =False):
 
         '''
         Only works for interpretibility, you have to know: num_hidden_unit.
@@ -80,7 +80,10 @@ class Interpret(object):
         f5 = TimeDistributed(Dense(1, activation='linear'),name='time_distributed_1')
 
         inputs = Input(shape = (self.block_len,3))
-        predictions = f5(f4(f3(f2(f1(inputs)))))
+        if no_bn:
+            predictions = f5(f3(f1(inputs)))
+        else:
+            predictions = f5(f4(f3(f2(f1(inputs)))))
 
         model = Model(inputs=inputs, outputs=predictions)
         optimizer= keras.optimizers.adam(lr=0.001, clipnorm=1.0)               # not useful
@@ -314,9 +317,14 @@ def likelihood_snr_range():
     ###############################################
     # Input Parameters
     ###############################################
-    #network_saved_path = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
-    network_saved_path = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_1.h5'
-    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100)
+    # network_saved_path = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
+    # interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100)
+
+    network_saved_path = './model_zoo/nobn_awgn/test1.h5'
+    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100, no_bn=True, rnn_type='gru')
+
+    #network_saved_path = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_1.h5'
+    #interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100)
 
     radar_bit_pos = 50
 
@@ -380,11 +388,11 @@ def likelihood_1():
     ###############################################
     # Input Parameters
     ###############################################
-    label1 = 'Hyeji Trained BCJR'
+    label1 = 'Hyeji Trained No Batch Norm'
     label2 = 'radar trained '
     label3 = 'awgn trained'
 
-    network_saved_path_1 = './model_zoo/radar_bcjr_trained/hyeji_reformat_0921.h5'
+    network_saved_path_1 = './model_zoo/nobn_awgn/test1.h5'
     network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
@@ -392,7 +400,7 @@ def likelihood_1():
     num_block = 100
     sigma_set = 1.0
 
-    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block, rnn_type = 'gru')
+    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block, rnn_type = 'gru', no_bn=True)
 
     map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = sigma_set,
                                                                   radar_noise_power = 10, is_compute_map=True,
@@ -511,11 +519,12 @@ def likelihood_radartrained_vs_awgntrained():
     ###############################################
     # Input Parameters
     ###############################################
-    label1 = 't-dist v3 trained '
+    #label1 = 't-dist v3 trained '
+    label1 = 'Hyeji No BN GRU'
     label2 = 'radar trained '
     label3 = 'awgn trained'
 
-    network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
+    network_saved_path_1 = './model_zoo/nobn_awgn/test1.h5'
     network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
@@ -523,7 +532,7 @@ def likelihood_radartrained_vs_awgntrained():
     num_block = 200
 
 
-    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
+    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block, rnn_type='gru', no_bn=True)
 
     rnn_ll_non_bursty1, rnn_ll_bursty1 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
                                                                   radar_noise_power = 10, is_compute_map=False,
@@ -878,14 +887,14 @@ def ber_snr_range():
 
 if __name__ == '__main__':
     # User Case 1, likelihood on bursty noise and AWGN only. Compare RNN and BCJR's output.
-    #likelihood_snr_range()
+    likelihood_snr_range()
 
     # User Case 2, likelihood on RNN models. Compare the output scale.
     #likelihood_radartrained_vs_awgntrained()
     #likelihood_1()
 
     # User Case 3, ber on bursty noise. Compare stacked RNN decoder and Turbo Decoder's BER bit-wise
-    ber_snr_range()
+    #ber_snr_range()
 
     # User Case 4, ber on bursty noise over RNN models.
     #ber_rnn_compare()
