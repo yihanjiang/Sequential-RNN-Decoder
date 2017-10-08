@@ -90,18 +90,33 @@ def corrupt_signal(input_signal, noise_type, sigma = 1.0,
     elif noise_type == 'hyeji_bursty':
         bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
         add_pos     = np.random.choice([0.0, 1.0], data_shape, p=[1 - radar_prob, radar_prob])
-        corrupted_signal = bpsk_signal + np.random.normal(0, radar_power, size = data_shape ) * add_pos
+        corrupted_signal = bpsk_signal + radar_power* np.random.standard_normal( size = data_shape ) * add_pos
 
         #
         # burst = np.random.randint(0, data_shape[0], int(radar_prob*data_shape[0]))
         # bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
         # corrupt_signal[burst] = bpsk_signal[burst] + radar_power * np.random.standard_normal(data_shape)
 
-    elif noise_type == 'hyeji_bursty+denoise':
+    elif noise_type == 'hyeji_bursty+denoise' or noise_type == 'hyeji_bursty+denoiseopt':
+
+        def denoise_thd_func():
+            sigma_1 = sigma
+            sigma_2 = radar_power
+            optimal_thd = math.sqrt( (2*(sigma_1**2)*(sigma_1**2 + sigma_2**2)/(sigma_2**2)) * math.log(math.sqrt(sigma_1**2 + sigma_2**2)/sigma_1))
+            return optimal_thd
+
         bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
         add_pos     = np.random.choice([0.0, 1.0], data_shape, p=[1 - radar_prob, radar_prob])
-        corrupted_signal = bpsk_signal + np.random.normal(0, radar_power, size = data_shape ) * add_pos
-        corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-denoise_thd, threshmax=denoise_thd, newval=0.0)
+        corrupted_signal = bpsk_signal + radar_power* np.random.standard_normal( size = data_shape ) * add_pos
+
+        #a = denoise_thd
+        if denoise_thd == 10.0:
+            a = denoise_thd_func() + 1
+            print a
+        else:
+            a = denoise_thd
+            print a
+        corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-a, threshmax=a, newval=0.0)
 
     elif noise_type == 'mixture-normalized':
 
@@ -217,6 +232,8 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
         print '[Debug] Customize noise model not supported yet'
     else:  # awgn
         pass
+
+    #print '[Build RNN Data] noise type is ', noise_type, ' noiser', noiser
 
     # Unpack Codec
     trellis1    = codec[0]

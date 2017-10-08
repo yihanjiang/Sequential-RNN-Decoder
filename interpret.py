@@ -520,11 +520,13 @@ def likelihood_radartrained_vs_awgntrained():
     # Input Parameters
     ###############################################
     #label1 = 't-dist v3 trained '
-    label1 = 'Hyeji No BN GRU'
+    #label1 = 'Hyeji No BN GRU'
+    label1 = 'Model 2 Trained'
     label2 = 'radar trained '
     label3 = 'awgn trained'
 
-    network_saved_path_1 = './model_zoo/nobn_awgn/test1.h5'
+    #network_saved_path_1 = './model_zoo/nobn_awgn/test1.h5'
+    network_saved_path_1 = './model_zoo/radar_model_end2end/hyeji_model_1004_trained_neg1_power20.h5'
     network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
@@ -532,7 +534,7 @@ def likelihood_radartrained_vs_awgntrained():
     num_block = 200
 
 
-    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block, rnn_type='gru', no_bn=True)
+    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block, rnn_type='lstm', no_bn=False)
 
     rnn_ll_non_bursty1, rnn_ll_bursty1 = interpret_1.likelihood(bit_pos_list=[radar_bit_pos],sigma = 0.5,
                                                                   radar_noise_power = 10, is_compute_map=False,
@@ -680,11 +682,12 @@ def likelihood_model_compare():
     # Input Parameters
     ###############################################
     label1 = 't-dist v3 trained '
-    label2 = 'radar trained '
+    label2 = 'model 2 trained '
     label3 = 'awgn trained'
 
     network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
-    network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
+    #network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
+    network_saved_path_2 = './model_zoo/radar_model_end2end/hyeji_model_1004_trained_neg1_power20.h5'
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
@@ -795,16 +798,18 @@ def ber_rnn_compare():
     ###############################################
     # Input Parameters
     ###############################################
-    label1 = 't-dist v3 trained '
-    label2 = 'radar trained '
+    #label1 = 't-dist v3 trained '
+    label1 = 'model 1 trained'
+    label2 = 'model 2 trained '
     label3 = 'awgn trained'
 
-    network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
-    network_saved_path_2 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
+    #network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
+    network_saved_path_1 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
+    network_saved_path_2 = './model_zoo/radar_model_end2end/hyeji_model_1004_trained_neg1_power20.h5'
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 100
+    num_block = 5000
 
 
     # interpret_0  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
@@ -887,7 +892,7 @@ def ber_snr_range():
 
 if __name__ == '__main__':
     # User Case 1, likelihood on bursty noise and AWGN only. Compare RNN and BCJR's output.
-    likelihood_snr_range()
+    #likelihood_snr_range()
 
     # User Case 2, likelihood on RNN models. Compare the output scale.
     #likelihood_radartrained_vs_awgntrained()
@@ -897,7 +902,7 @@ if __name__ == '__main__':
     #ber_snr_range()
 
     # User Case 4, ber on bursty noise over RNN models.
-    #ber_rnn_compare()
+    ber_rnn_compare()
 
     # User Case 5
     #likelihood_model_compare()

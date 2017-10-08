@@ -198,9 +198,11 @@ if __name__ == '__main__':
         '''
         Compute Turbo Decoding in 1 iterations for one SNR point.
         '''
-        np.random.seed(x)
+        np.random.seed()
         message_bits = np.random.randint(0, 2, block_len)
         [sys, par1, par2] = turbo.turbo_encode(message_bits, trellis1, trellis2, interleaver)
+
+        #print 'noiser', noise_type, vv, radar_power, radar_prob, denoise_thd
 
         sys_r  = corrupt_signal(sys, noise_type =noise_type, sigma = test_sigmas[idx],
                                vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
