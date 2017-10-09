@@ -97,7 +97,7 @@ def corrupt_signal(input_signal, noise_type, sigma = 1.0,
         # bpsk_signal = 2.0*input_signal-1.0 + sigma * np.random.standard_normal(data_shape)
         # corrupt_signal[burst] = bpsk_signal[burst] + radar_power * np.random.standard_normal(data_shape)
 
-    elif noise_type == 'hyeji_bursty+denoise' or noise_type == 'hyeji_bursty+denoiseopt':
+    elif noise_type == 'hyeji_bursty+denoise' or noise_type == 'hyeji_bursty+denoise0' or noise_type == 'hyeji_bursty+denoise1':
 
         def denoise_thd_func():
             sigma_1 = sigma
@@ -116,7 +116,12 @@ def corrupt_signal(input_signal, noise_type, sigma = 1.0,
         else:
             a = denoise_thd
             print a
-        corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-a, threshmax=a, newval=0.0)
+
+        if noise_type == 'hyeji_bursty+denoise' or noise_type == 'hyeji_bursty+denoise0':
+            corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-a, threshmax=a, newval=0.0)
+        else:
+            corrupted_signal  = stats.threshold(corrupted_signal, threshmin=-a, newval=-a)
+            corrupted_signal  = stats.threshold(corrupted_signal, threshmax=a, newval=a)
 
     elif noise_type == 'mixture-normalized':
 

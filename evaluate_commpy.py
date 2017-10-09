@@ -97,7 +97,9 @@ if __name__ == '__main__':
 
         print '[Setting Parameters] Noise Type is ', noise_type, 'with Radar Power ', radar_power, ' with Radar Probability ', radar_prob
 
-    elif noise_type == 'awgn+radar+denoise' or noise_type == 'hyeji_bursty+denoise':
+    elif noise_type == 'awgn+radar+denoise' or noise_type == 'hyeji_bursty+denoise' or \
+                    noise_type == 'hyeji_bursty+denoise1' or noise_type == 'hyeji_bursty+denoise0':
+
         if '-radar_power' in n_inp:
             ind1 = n_inp.index('-radar_power')
             radar_power   = float(n_inp[ind1+1])
