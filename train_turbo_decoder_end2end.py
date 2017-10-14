@@ -7,8 +7,6 @@ import sys
 import numpy as np
 import time
 
-import logging
-
 import commpy.channelcoding.convcode as cc
 import commpy.channelcoding.interleavers as RandInterlv
 
@@ -18,6 +16,8 @@ if __name__ == '__main__':
     ##########################################
     print 'TBDs: (1) logging is not done yet!'
 
+
+
     n_inp = sys.argv[1:]
 
     if '--help' in n_inp:
@@ -25,6 +25,21 @@ if __name__ == '__main__':
             print fin.read()
         exit_now = True
         sys.exit()
+
+    if '--share_gpu' in n_inp:
+        import tensorflow as tf
+        from keras.backend.tensorflow_backend import set_session
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = 0.48
+        set_session(tf.Session(config=config))
+
+        print '[Test][Warining] Restrict GPU memory usage to 48%'
+
+    if '--save_every_epoch' in n_inp:
+        import keras
+        save_epoch_cb = keras.callbacks.ModelCheckpoint('./tmp/', monitor='val_loss', verbose=0,
+                                                        save_best_only=False, save_weights_only=True, mode='auto',
+                                                        period=1)
 
     if '-block_len' in n_inp:
         ind1      = n_inp.index('-block_len')
@@ -99,6 +114,13 @@ if __name__ == '__main__':
 
     print '[Setting Parameters] Training Data SNR is ', train_snr, ' dB'
 
+    if '-train_loss' in n_inp:
+        ind1      = n_inp.index('-train_loss')
+        train_loss = str(n_inp[ind1+1])
+    else:
+        train_loss = 'binary_crossentropy'
+    print '[Setting Parameters] Training Loss is ', train_loss
+
     if '-network_model_path' in n_inp:
         ind1      = n_inp.index('-network_model_path')
         starting_model_path = str(n_inp[ind1+1])
@@ -133,7 +155,7 @@ if __name__ == '__main__':
 
     if '-batch_size' in n_inp:
         ind1      = n_inp.index('-batch_size')
-        batch_size = float(n_inp[ind1+1])
+        batch_size = int(n_inp[ind1+1])
     else:
         batch_size = 10
 
@@ -198,9 +220,7 @@ if __name__ == '__main__':
 
     model = load_model(learning_rate=learning_rate,rnn_type=rnn_type, block_len=block_len,
                        network_saved_path = starting_model_path, num_hidden_unit=num_hidden_unit,
-                       interleave_array = p_array, dec_iter_num = dec_iter_num)
-
-    #print model.get_config()
+                       interleave_array = p_array, dec_iter_num = dec_iter_num, loss=train_loss)
 
     end_time = time.time()
     print '[RNN decoder]loading RNN model takes ', str(end_time-start_time), ' secs'
@@ -218,9 +238,32 @@ if __name__ == '__main__':
     X_feed_test, X_message_test = build_rnn_data_feed(num_block_test,  block_len, noiser, codec)
     X_feed_train,X_message_train= build_rnn_data_feed(num_block_train, block_len, noiser, codec)
 
-    model.fit(x=X_feed_train, y=X_message_train, batch_size=batch_size,
-              #callbacks=[change_lr],
-              epochs=num_epoch, validation_data=(X_feed_test, X_message_test))  # starts training
+    print X_feed_train.shape, X_message_train.shape
+
+    def turbo_generator(features, labels, batch_size):
+
+        batch_features = np.zeros((batch_size, block_len, 5))
+        batch_labels = np.zeros((batch_size,block_len, 1))
+        while True:
+            for i in range(batch_size):
+                # choose random index in features
+                index= np.random.choice(features.shape[0], 1)
+                batch_features[i] = features[index, :, :]
+                batch_labels[i]   = labels[index, :, :]
+
+            yield batch_features, batch_labels
+
+
+    model.fit_generator(turbo_generator(X_feed_train, X_message_train, batch_size),
+                        steps_per_epoch=num_block_train/batch_size,
+                        epochs=num_epoch,
+                        validation_data=turbo_generator(X_feed_test, X_message_test, batch_size),
+                        validation_steps=num_block_test/batch_size,
+                        use_multiprocessing = True)
+
+    # model.fit(x=X_feed_train, y=X_message_train, batch_size=batch_size,
+    #           #callbacks=[change_lr],
+    #           epochs=num_epoch, validation_data=(X_feed_test, X_message_test))  # starts training
 
     identity = str(np.random.random())
 

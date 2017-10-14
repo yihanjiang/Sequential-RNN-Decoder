@@ -90,7 +90,7 @@ if __name__ == '__main__':
         ind1      = n_inp.index('-learning_rate')
         learning_rate = float(n_inp[ind1+1])
     else:
-        learning_rate = 1e-3
+        learning_rate = 1e-2
 
     print '[BCJR Setting Parameters] Initial learning_rate is ', learning_rate
 
@@ -252,8 +252,8 @@ if __name__ == '__main__':
         num_hunit_rnn = 200
     print '[BCJR Setting Parameters] Number of RNN unit is ', num_hunit_rnn
 
-    train_batch_size  = 200               # 200 good.
-    test_batch_size   = 200
+    train_batch_size  = 100                   # 100 good.
+    test_batch_size   = 100
     dropout_rate      = 1.0                   # Dropout !=1.0 doesn't work!
     input_feature_num = 3
 
@@ -389,6 +389,12 @@ if __name__ == '__main__':
     model_des = str(codec_type) +'_'+ str(num_hunit_rnn)+'_' + str(rnn_type)+'_' + str(rnn_direction)+'_' +str(block_len)
     model.save_weights('./tmp/bcjr_train'+str(model_des)+str(identity)+'_1.h5')
     print '[BCJR] Saved Model at', './tmp/bcjr_train'+str(model_des)+str(identity)+'_1.h5'
+
+    del model
+
+    model = Model(inputs=inputs, outputs=predictions)
+    optimizer= keras.optimizers.adam(lr=learning_rate/10.0)
+    model.compile(optimizer=optimizer,loss='mean_squared_error', metrics=[errors])
 
     model.fit(x=X_input, y=X_target, batch_size=train_batch_size,
               epochs=num_epoch, validation_split = 0.1)#validation_data=(test_tx, X_test))  # starts training

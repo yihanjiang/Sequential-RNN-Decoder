@@ -24,6 +24,17 @@ if __name__ == '__main__':
         exit_now = True
         sys.exit()
 
+    if '--share_gpu' in n_inp:
+        import tensorflow as tf
+        from keras.backend.tensorflow_backend import set_session
+        config = tf.ConfigProto()
+        frac = 0.45
+
+        config.gpu_options.per_process_gpu_memory_fraction = frac
+        set_session(tf.Session(config=config))
+
+        print '[Test][Warining] Restrict GPU memory usage to 45%, enable',str(int(1/0.45)), 'processes'
+
     if '-block_len' in n_inp:
         ind1      = n_inp.index('-block_len')
         block_len = int(n_inp[ind1+1])

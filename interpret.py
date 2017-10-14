@@ -123,7 +123,8 @@ class Interpret(object):
 
     def likelihood(self, bit_pos_list, sigma, radar_noise_power=20.0,
                    is_same_code = False, is_all_zero = True,
-                   is_compute_no_bursty = False, is_compute_map = False):
+                   is_compute_no_bursty = False, is_compute_map = False,
+                   normalize_input = False):
         '''
         compute the likelihood along the positions.
         :param bit_pos:
@@ -149,6 +150,8 @@ class Interpret(object):
         codec  = [trellis1, trellis2, interleaver]
         X_feed_test, X_message_test = build_rnn_data_feed(self.num_block, self.block_len, noiser, codec,
                                                           is_same_code=is_same_code, is_all_zero=is_all_zero)
+        if normalize_input:
+            X_feed_test /= (sigma**2)
 
         if is_compute_no_bursty:
             ##############################################################
@@ -167,11 +170,15 @@ class Interpret(object):
                     sys_r        =  encoded[:, 0]
                     par1_r       =  encoded[:, 1]
 
-                    # CommPy Map
                     L_int = np.zeros(len(sys_r))
 
-                    [L_ext_1_noburst, decoded_bits] = turbo.map_decode(sys_r, par1_r,
-                                                         trellis1, sigma**2, L_int, 'decode')
+                    if normalize_input:
+                        [L_ext_1_noburst, decoded_bits] = turbo.map_decode(sys_r, par1_r,
+                                                             trellis1, 1.0, L_int, 'decode')
+
+                    else:
+                        [L_ext_1_noburst, decoded_bits] = turbo.map_decode(sys_r, par1_r,
+                                                             trellis1, sigma**2, L_int, 'decode')
 
                     map_likelihood_list.append(L_ext_1_noburst)
 
@@ -319,7 +326,7 @@ def likelihood_snr_range():
     ###############################################
     # network_saved_path = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
     # interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100)
-
+    normalize_input = True # 1012 test case
     network_saved_path = './model_zoo/nobn_awgn/test1.h5'
     interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100, no_bn=True, rnn_type='gru')
 
@@ -331,22 +338,26 @@ def likelihood_snr_range():
     map_ll_non_bursty1, rnn_ll_non_bursty1, map_ll_bursty1, rnn_ll_bursty1 = interpret.likelihood(bit_pos_list=[radar_bit_pos], sigma=0.5,
                                                                                               radar_noise_power = 10, is_compute_map=True,
                                                                                               is_compute_no_bursty=True,
-                                                                                              is_same_code = False, is_all_zero = True)
+                                                                                              is_same_code = False, is_all_zero = True,
+                                                                                              normalize_input = normalize_input)
 
     map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
                                                                                               radar_noise_power = 10, is_compute_map=True,
                                                                                               is_compute_no_bursty=True,
-                                                                                              is_same_code = False, is_all_zero = True)
+                                                                                              is_same_code = False, is_all_zero = True,
+                                                                                              normalize_input = normalize_input)
 
     map_ll_non_bursty3, rnn_ll_non_bursty3, map_ll_bursty3, rnn_ll_bursty3 = interpret.likelihood(bit_pos_list=[radar_bit_pos],sigma = 2.0,
                                                                                               radar_noise_power = 10, is_compute_map=True,
                                                                                               is_compute_no_bursty=True,
-                                                                                              is_same_code = False, is_all_zero = True)
+                                                                                              is_same_code = False, is_all_zero = True,
+                                                                                              normalize_input = normalize_input)
 
     map_ll_non_bursty4, rnn_ll_non_bursty4, map_ll_bursty4, rnn_ll_bursty4 = interpret.likelihood(bit_pos_list=[radar_bit_pos],sigma = 5.0,
                                                                                               radar_noise_power = 10, is_compute_map=True,
                                                                                               is_compute_no_bursty=True,
-                                                                                              is_same_code = False, is_all_zero = True)
+                                                                                              is_same_code = False, is_all_zero = True,
+                                                                                              normalize_input = normalize_input)
 
     plt.figure(1)
     plt.subplot(121)
@@ -809,7 +820,7 @@ def ber_rnn_compare():
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 5000
+    num_block = 100
 
 
     # interpret_0  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
@@ -892,7 +903,7 @@ def ber_snr_range():
 
 if __name__ == '__main__':
     # User Case 1, likelihood on bursty noise and AWGN only. Compare RNN and BCJR's output.
-    #likelihood_snr_range()
+    likelihood_snr_range()
 
     # User Case 2, likelihood on RNN models. Compare the output scale.
     #likelihood_radartrained_vs_awgntrained()
@@ -902,7 +913,7 @@ if __name__ == '__main__':
     #ber_snr_range()
 
     # User Case 4, ber on bursty noise over RNN models.
-    ber_rnn_compare()
+    #ber_rnn_compare()
 
     # User Case 5
     #likelihood_model_compare()

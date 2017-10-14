@@ -11,9 +11,20 @@ from keras.layers.core import Lambda
 from keras.layers import TimeDistributed
 from keras.layers import LSTM, GRU, SimpleRNN
 from keras.layers.wrappers import  Bidirectional
-
+from keras.callbacks import LearningRateScheduler
+from keras import regularizers
+import commpy.channelcoding.convcode as cc
+import commpy.channelcoding
+import commpy.channelcoding.turbo as turbo
+import commpy.channelcoding.interleavers as RandInterlv
+import matplotlib.pyplot as plt
+from commpy.utilities import *
 from keras import backend as K
 from keras.engine import Layer
+
+import scipy.io as sio
+import matplotlib
+import h5py
 
 #######################################
 # TBD: Customize Layer for future use
@@ -279,11 +290,6 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     def concat(x):
         return K.concatenate(x)
 
-    takell = Lambda(takeLL)
-    lambda_concat = Lambda(concat)
-    DeInt = DeInterleave(interleave_array=interleave_array)
-    DoInt = Interleave(interleave_array=interleave_array)
-
     def subtr(x2):
         # x2_out = f5(f4(f3(f2(f1(x2)))))
         # return x2_out
@@ -294,8 +300,8 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
         else:
             print 'other layer not supported!'
             return
-        x2_temp = lambda_concat([x2_out, x2])
-        x2 = takell(x2_temp)
+        x2_temp = Lambda(concat)([x2_out, x2])
+        x2 = Lambda(takeLL)(x2_temp)
         return x2
 
     # def subtr_sigmoid(x2):
@@ -310,34 +316,34 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
 
     x1 = Lambda(split_data_0, name='three')(inputs) # sys, par1, 0 (initial likelihood)
     x1 = subtr(x1)#x1 = f5(f4(f3(f2(f1(x1)))))
-    x1 = DoInt(x1)
+    x1 = Interleave(interleave_array=interleave_array)(x1)
 
-    x2 = lambda_concat([x_input_2, x1])
+    x2 = Lambda(concat)([x_input_2, x1])
     x2 = subtr(x2)#x2 = f5(f4(f3(f2(f1(x2)))))
-    x2 = DeInt(x2)
+    x2 = DeInterleave(interleave_array=interleave_array)(x2)
 
     for dec_iter in range(dec_iter_num-2):
-        x3 = lambda_concat([x_input_1, x2])
+        x3 = Lambda(concat)([x_input_1, x2])
         x3 = subtr(x3)#x3 = f5(f4(f3(f2(f1(x3)))))
-        x3 = DoInt(x3)
+        x3 = Interleave(interleave_array=interleave_array)(x3)
 
-        x4 = lambda_concat([x_input_2, x3])
+        x4 = Lambda(concat)([x_input_2, x3])
         x4 = subtr(x4)
-        x4 = DeInt(x4)
+        x4 = DeInterleave(interleave_array=interleave_array)(x4)
         x2 = x4
 
-    x3 = lambda_concat([x_input_1, x2])
+    x3 = Lambda(concat)([x_input_1, x2])
     x3 = subtr(x3)#x3 = f5(f4(f3(f2(f1(x3)))))
-    x3 = DoInt(x3)
+    x3 = Interleave(interleave_array=interleave_array)(x3)
 
-    x4 = lambda_concat([x_input_2, x3])
+    x4 = Lambda(concat)([x_input_2, x3])
 
     if num_layer == 2:
         x4 = f6(f4(f3(f2(f1(x4)))))
     elif num_layer == 1:
         x4 = f6(f2(f1(x4)))
 
-    x4 = DeInt(x4)
+    x4 = DeInterleave(interleave_array=interleave_array)(x4)
 
     predictions = x4
 
@@ -345,10 +351,7 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     optimizer= keras.optimizers.adam(lr=learning_rate, clipnorm=1.0)
     model.compile(optimizer=optimizer,loss=loss, metrics=[errors])
 
-    try:
-        model.load_weights(network_saved_path, by_name=True)
-    except:
-        print '[RNN Model][Warning]loading weight fails!'
+    model.load_weights(network_saved_path, by_name=True)
 
     #print model.summary()
 
