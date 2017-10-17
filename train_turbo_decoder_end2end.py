@@ -7,6 +7,8 @@ import sys
 import numpy as np
 import time
 
+import keras
+
 import commpy.channelcoding.convcode as cc
 import commpy.channelcoding.interleavers as RandInterlv
 
@@ -253,22 +255,30 @@ if __name__ == '__main__':
 
             yield batch_features, batch_labels
 
+    identity = str(np.random.random())
+    save_path = model_save_path + identity+ '.h5'
+    model.save_weights(save_path)
+
+    print '[Warning] Save every epoch', identity
+
+
+    save_cb = keras.callbacks.ModelCheckpoint('./tmp/save'+identity+ '_{epoch:02d}-{val_loss:.2f}' +'.h5', monitor='val_loss', verbose=0,
+                                              save_best_only=False, save_weights_only=True, mode='auto', period=1)
+
 
     model.fit_generator(turbo_generator(X_feed_train, X_message_train, batch_size),
                         steps_per_epoch=num_block_train/batch_size,
                         epochs=num_epoch,
                         validation_data=turbo_generator(X_feed_test, X_message_test, batch_size),
                         validation_steps=num_block_test/batch_size,
+                        callbacks=[save_cb],
                         use_multiprocessing = True)
 
     # model.fit(x=X_feed_train, y=X_message_train, batch_size=batch_size,
     #           #callbacks=[change_lr],
     #           epochs=num_epoch, validation_data=(X_feed_test, X_message_test))  # starts training
 
-    identity = str(np.random.random())
 
-    save_path = model_save_path + identity+ '.h5'
-    model.save_weights(save_path)
     print '[Training] saved model in ', save_path
 
     print '[Training]This is SNR', SNR ,'Training'
