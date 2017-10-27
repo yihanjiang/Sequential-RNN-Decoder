@@ -33,7 +33,7 @@ if __name__ == '__main__':
         ind1      = n_inp.index('-block_len')
         block_len = int(n_inp[ind1+1])
     else:
-        block_len = 1000
+        block_len = 100
     print '[Setting Parameters] Code Block Length is ', block_len
 
     if '-num_block' in n_inp:
@@ -70,6 +70,7 @@ if __name__ == '__main__':
     radar_power = -1.0
     radar_prob  = -1.0
     denoise_thd = 10.0
+    snr_mix = [-1, -1, -1]
 
     if noise_type == 'awgn':
         print '[Setting Parameters] Noise Type is ', noise_type
@@ -120,6 +121,22 @@ if __name__ == '__main__':
 
         print '[Setting Parameters] Using Thresholding Denoise with denoise threshold', denoise_thd
         print '[Setting Parameters] Noise Type is ', noise_type, 'with Radar Power ', radar_power, ' with Radar Probability ', radar_prob
+
+    elif noise_type == 'mix_snr_turbo' or noise_type == 'random_snr_turbo':
+        if '-mix_snr' in n_inp:
+            ind1 = n_inp.index('-mix_snr')
+            snr_0 = float(n_inp[ind1+1])
+            snr_1  = float(n_inp[ind1+2])
+            snr_2  = float(n_inp[ind1+3])
+        else:
+            snr_0  = -1.0
+            snr_1  = 0.0
+            snr_2  = 1.0
+        snr_mix = [snr_0, snr_1, snr_2]
+
+        print '[Warning] mixing snr in different bit with snr 0, 1, 2', snr_mix, 'converting from dB to sigma'
+        from utils import snr_db2sigma
+        snr_mix = [snr_db2sigma(item) for item in snr_mix]
 
     if '-snr_range' in n_inp:
         ind1      = n_inp.index('-snr_range')
@@ -193,6 +210,7 @@ if __name__ == '__main__':
 
     SNRS = SNRS_dB
     print '[testing] SNR range in dB ', SNRS
+    print '[testing] SNR range in real number', test_sigmas
 
     tic = time.time()
 
@@ -207,11 +225,14 @@ if __name__ == '__main__':
         #print 'noiser', noise_type, vv, radar_power, radar_prob, denoise_thd
 
         sys_r  = corrupt_signal(sys, noise_type =noise_type, sigma = test_sigmas[idx],
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd,
+                               snr_mixture=snr_mix)
         par1_r = corrupt_signal(par1, noise_type =noise_type, sigma = test_sigmas[idx],
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd,
+                               snr_mixture=snr_mix)
         par2_r = corrupt_signal(par2, noise_type =noise_type, sigma = test_sigmas[idx],
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd,
+                               snr_mixture=snr_mix)
 
         #decoded_bits = turbo.hazzys_turbo_decode(sys_r, par1_r, par2_r, trellis1, test_sigmas[idx]**2, dec_iter_num, interleaver, L_int = None)
         if is_fixed_var:

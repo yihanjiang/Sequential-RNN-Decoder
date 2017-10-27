@@ -124,7 +124,7 @@ class Interpret(object):
     def likelihood(self, bit_pos_list, sigma, radar_noise_power=20.0,
                    is_same_code = False, is_all_zero = True,
                    is_compute_no_bursty = False, is_compute_map = False,
-                   normalize_input = False):
+                   normalize_input = False, is_t = False):
         '''
         compute the likelihood along the positions.
         :param bit_pos:
@@ -146,7 +146,12 @@ class Interpret(object):
         trellis2 = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
         interleaver = RandInterlv.RandInterlv(self.block_len, 0)
 
-        noiser = ['awgn', sigma]
+        if is_t == False:
+            noiser = ['awgn', sigma]
+        else:
+            noiser = ['t-dist', sigma, 3, -1, -1, -1, [-1, -1, -1]]
+            print noiser
+
         codec  = [trellis1, trellis2, interleaver]
         X_feed_test, X_message_test = build_rnn_data_feed(self.num_block, self.block_len, noiser, codec,
                                                           is_same_code=is_same_code, is_all_zero=is_all_zero)
@@ -223,7 +228,8 @@ class Interpret(object):
             else:
                 return rnn_ll_bursty
 
-    def ber(self, bit_pos_list, sigma, radar_noise_power=20.0, is_compute_no_bursty = False, is_compute_map = False):
+    def ber(self, bit_pos_list, sigma, radar_noise_power=20.0, is_compute_no_bursty = False, is_compute_map = False,
+             is_t = False, is_compute_bursty = True):
         '''
         Compute Turbo BER along block in different positions.
         '''
@@ -248,8 +254,12 @@ class Interpret(object):
         model = load_model(interleave_array=interleaver.p_array, network_saved_path = self.network_saved_path, block_len=self.block_len,
                            dec_iter_num = dec_iter_num, num_hidden_unit=num_hidden_unit)
 
+        if is_t:
+            noiser = ['awgn', sigma]
+        else:
+            noiser = ['t-dist', sigma, 3, -1, -1, -1, [-1, -1, -1]]
+            print noiser
 
-        noiser = ['awgn', sigma]
         codec  = [trellis1, trellis2, interleaver]
         X_feed_test, X_message_test = build_rnn_data_feed(self.num_block, self.block_len, noiser, codec, is_all_zero=False)
 
@@ -267,53 +277,60 @@ class Interpret(object):
                 par1_r       =  encoded[:, 1]
                 par2_r       =  encoded[:, 4]
 
-                decoded_bits = turbo.turbo_decode(sys_r, par1_r, par2_r, trellis1, sigma**2, 6, interleaver, L_int = None)
+                decoded_bits = turbo.hazzys_turbo_decode(sys_r, par1_r, par2_r, trellis1, sigma**2, 6, interleaver, L_int = None)
 
                 map_ber_list.append(np.array(decoded_bits) != message_bits.T)
 
             map_ber_non_bursty = np.stack(map_ber_list, axis=0)
             map_ber_non_bursty = np.mean(map_ber_non_bursty, axis=0).tolist()[0]
 
-        for bit_pos in bit_pos_list:
-            X_feed_test = self.add_bursty_noise(X_feed_test, bit_pos, radar_noise_power,
-                                                is_interleave=True, interleave_array=interleaver.p_array)
+            print '[BCJR RNN Interpret] RNN BER for Non Bursty Noise Case', rnn_ber_non_bursty
+            print '[BCJR RNN Interpret] BCJR BER for Non Bursty Noise Case', map_ber_non_bursty
 
-        pd  = model.predict(X_feed_test,batch_size = 100)
-        rnn_ber_bursty = np.mean(np.round(pd)!=X_message_test, axis = 0).T.tolist()[0]
+        if is_compute_bursty:
+            for bit_pos in bit_pos_list:
+                X_feed_test = self.add_bursty_noise(X_feed_test, bit_pos, radar_noise_power,
+                                                    is_interleave=True, interleave_array=interleaver.p_array)
 
-        # Turbo Decoder
-        map_ber_list = []
-        for block_idx in range(self.num_block):
-            message_bits =  X_message_test[block_idx, :, :]
-            encoded      =  X_feed_test[block_idx, :, :]
-            sys_r        =  encoded[:, 0]
-            par1_r       =  encoded[:, 1]
-            par2_r       =  encoded[:, 4]
+            pd  = model.predict(X_feed_test,batch_size = 100)
+            rnn_ber_bursty = np.mean(np.round(pd)!=X_message_test, axis = 0).T.tolist()[0]
 
-            decoded_bits = turbo.turbo_decode(sys_r, par1_r, par2_r, trellis1, sigma**2, 6, interleaver, L_int = None)
+            # Turbo Decoder
+            map_ber_list = []
+            for block_idx in range(self.num_block):
+                message_bits =  X_message_test[block_idx, :, :]
+                encoded      =  X_feed_test[block_idx, :, :]
+                sys_r        =  encoded[:, 0]
+                par1_r       =  encoded[:, 1]
+                par2_r       =  encoded[:, 4]
 
-            map_ber_list.append(np.array(decoded_bits) != message_bits.T)
+                decoded_bits = turbo.hazzys_turbo_decode(sys_r, par1_r, par2_r, trellis1, sigma**2, 6, interleaver, L_int = None)
 
-        map_ber_bursty = np.stack(map_ber_list, axis=0)
-        map_ber_bursty = np.mean(map_ber_bursty, axis=0).tolist()[0]
+                map_ber_list.append(np.array(decoded_bits) != message_bits.T)
 
-        print '[BCJR RNN Interpret] RNN BER for Bursty Noise Case', rnn_ber_bursty
-        print '[BCJR RNN Interpret] BCJR BER for Bursty Noise Case', map_ber_bursty
+            map_ber_bursty = np.stack(map_ber_list, axis=0)
+            map_ber_bursty = np.mean(map_ber_bursty, axis=0).tolist()[0]
+
+            print '[BCJR RNN Interpret] RNN BER for Bursty Noise Case', rnn_ber_bursty
+            print '[BCJR RNN Interpret] BCJR BER for Bursty Noise Case', map_ber_bursty
         #
-        print '[BCJR RNN Interpret] RNN BER for Non Bursty Noise Case', rnn_ber_non_bursty
-        print '[BCJR RNN Interpret] BCJR BER for Non Bursty Noise Case', map_ber_non_bursty
 
-        if is_compute_no_bursty:
+
+        if is_compute_no_bursty and is_compute_bursty:
             if is_compute_map:
                 return map_ber_non_bursty, rnn_ber_non_bursty, map_ber_bursty, rnn_ber_bursty
             else:
                 return rnn_ber_non_bursty, rnn_ber_bursty
-        else:
+        elif is_compute_no_bursty == False and is_compute_bursty == True:
             if is_compute_map:
                 return map_ber_bursty, rnn_ber_bursty
             else:
                 return rnn_ber_bursty
-
+        elif is_compute_no_bursty == True and is_compute_bursty == False:
+            if is_compute_map:
+                return map_ber_non_bursty, rnn_ber_non_bursty
+            else:
+                return rnn_ber_non_bursty
 
 
 
@@ -328,7 +345,7 @@ def likelihood_snr_range():
     # interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100)
     normalize_input = True # 1012 test case
     network_saved_path = './model_zoo/nobn_awgn/test1.h5'
-    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100, no_bn=True, rnn_type='gru')
+    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100, no_bn=False, rnn_type='gru')
 
     #network_saved_path = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_1.h5'
     #interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=100)
@@ -702,7 +719,7 @@ def likelihood_model_compare():
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 100
+    num_block = 1000
 
     interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
 
@@ -820,7 +837,7 @@ def ber_rnn_compare():
     network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
 
     radar_bit_pos = 50
-    num_block = 100
+    num_block = 1000
 
 
     # interpret_0  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
@@ -881,7 +898,7 @@ def ber_snr_range():
     ###############################################
     network_saved_path = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
     #network_saved_path = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_1.h5'
-    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=5000, is_ll=False)
+    interpret = Interpret(network_saved_path=network_saved_path, block_len=100, num_block=500, is_ll=False)
 
     radar_bit_pos = 50
 
@@ -893,17 +910,203 @@ def ber_snr_range():
     plt.title('Compare BER between RNN/Turbo')
     plt.yscale('log')
     p1, = plt.plot(map_ber_non_bursty, 'y', label ='Turbo Non Bursty' )
-    #p2, = plt.plot(rnn_ber_non_bursty, 'g', label ='RNN Non Bursty')
+    p2, = plt.plot(rnn_ber_non_bursty, 'g', label ='RNN Non Bursty')
     p3, = plt.plot(map_ber_bursty,     'b', label ='Turbo Bursty')
-    #p4, = plt.plot(rnn_ber_bursty,     'k', label ='RNN Bursty')
-    plt.legend(handles = [p1, p3])
-    #plt.legend(handles = [p1, p2, p3, p4])
+    p4, = plt.plot(rnn_ber_bursty,     'k', label ='RNN Bursty')
+    #plt.legend(handles = [p1, p3])
+    plt.grid()
+    plt.legend(handles = [p1, p2, p3, p4])
     plt.show()
+
+
+def ber_bursty_only_compare():
+    print '[Interpret] Comparing between different RNN models'
+    ###############################################
+    # Input Parameters
+    ###############################################
+    #label1 = 't-dist v3 trained '
+    label1 = 'model 1 trained'
+    label2 = 'model 2 trained'
+    label3 = 'awgn trained'
+
+    #network_saved_path_1 = './model_zoo/tdist_v3_model_end2end/tdist_end2end_ttbl_0.440818870589_snr_4.h5'
+    network_saved_path_1 = './model_zoo/radar_model_end2end/0911radar_end2end_ttbl_0.406623492103_snr_2.h5'
+    network_saved_path_2 = './model_zoo/radar_model_end2end/hyeji_model_1004_trained_neg1_power20.h5'
+    network_saved_path_3 = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
+
+    radar_bit_pos = 50
+    num_block = 100
+
+
+    # interpret_0  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
+    # map_ber_non_bursty1, rnn_ber_non_bursty1, map_ber_bursty1, rnn_ber_bursty1 = interpret_0.ber(bit_pos_list=[radar_bit_pos], sigma=1.0,
+    #                                                                           radar_noise_power = 10, is_compute_map=True,
+    #                                                                           is_compute_no_bursty=True)
+
+    interpret_1  = Interpret(network_saved_path=network_saved_path_1, block_len=100, num_block=num_block)
+    map_ber_non_bursty1, rnn_ber_non_bursty1, map_ber_bursty1, rnn_ber_bursty1 = interpret_1.ber(bit_pos_list=[radar_bit_pos], sigma=1.0,
+                                                                              radar_noise_power = 10, is_compute_map=True,
+                                                                              is_compute_no_bursty=True)
+    interpret_2  = Interpret(network_saved_path=network_saved_path_2, block_len=100, num_block=num_block)
+    rnn_ber_non_bursty2,  rnn_ber_bursty2 = interpret_2.ber(bit_pos_list=[radar_bit_pos], sigma=1.0,
+                                                                              radar_noise_power = 10, is_compute_map=False,
+                                                                              is_compute_no_bursty=True)
+    interpret_3  = Interpret(network_saved_path=network_saved_path_3, block_len=100, num_block=num_block)
+    rnn_ber_non_bursty3,  rnn_ber_bursty3 = interpret_3.ber(bit_pos_list=[radar_bit_pos], sigma=1.0,
+                                                                              radar_noise_power = 10, is_compute_map=False,
+                                                                              is_compute_no_bursty=True)
+
+    plt.figure(1)
+    plt.title('Compare BER between RNN/Turbo\n over Turbo' + label1+label2+label3 + 'RNN')
+    plt.xlabel('Position')
+    p1, = plt.plot(map_ber_non_bursty1, 'b--', label ='Turbo Non Bursty' )
+    p2, = plt.plot(rnn_ber_non_bursty1, 'g', label =label1 + 'RNN Non Bursty')
+    p3, = plt.plot(map_ber_bursty1,     'b', label ='Turbo Bursty')
+    p4, = plt.plot(rnn_ber_bursty1,     'g--', label =label1 + 'RNN Bursty')
+
+    p5, = plt.plot(rnn_ber_non_bursty2, 'y--', label =label2 + 'RNN Non Bursty')
+    p6, = plt.plot(rnn_ber_bursty2,     'y', label =label2 + 'RNN Bursty')
+    p7, = plt.plot(rnn_ber_non_bursty3, 'k--', label =label3 + 'RNN Non Bursty')
+    p8, = plt.plot(rnn_ber_bursty3,     'k', label =label3 + 'RNN Bursty')
+
+    plt.legend(handles = [p1, p3,p4, p2, p5, p6, p7, p8])
+    plt.show()
+
+    plt.figure(2)
+    plt.xlabel('Position')
+    plt.title('Compare BER between RNN/Turbo\n over Turbo' + label1+label2+label3 + 'RNN')
+    plt.yscale('log')
+    p1, = plt.plot(map_ber_non_bursty1, 'b-*', label ='Turbo Non Bursty' )
+    p2, = plt.plot(rnn_ber_non_bursty1, 'g-*', label =label1 + 'RNN Non Bursty')
+    p3, = plt.plot(map_ber_bursty1,     'b', label ='Turbo Bursty')
+    p4, = plt.plot(rnn_ber_bursty1,     'g', label =label1 + 'RNN Bursty')
+
+    p5, = plt.plot(rnn_ber_non_bursty2, 'y-*', label =label2 + 'RNN Non Bursty')
+    p6, = plt.plot(rnn_ber_bursty2,     'y', label =label2 + 'RNN Bursty')
+    p7, = plt.plot(rnn_ber_non_bursty3, 'k-*', label =label3 + 'RNN Non Bursty')
+    p8, = plt.plot(rnn_ber_bursty3,     'k', label =label3 + 'RNN Bursty')
+
+    plt.legend(handles = [p1, p3,p4, p2, p5, p6, p7, p8])
+    plt.show()
+
+def t_dist_for_paper():
+    print '[Interpret] Likelihood output for T-dist'
+    ###############################################
+    # Input Parameters
+    ###############################################
+
+
+    network_saved_path_2 = './model_zoo/awgn_len100_end2end/awgn_bl100_1014.h5'
+
+    radar_bit_pos = 50
+    num_block = 5000
+
+    interpret_2 = Interpret(network_saved_path=network_saved_path_2, block_len=100, num_block=num_block)
+
+    map_ll_non_bursty2_t, rnn_ll_non_bursty2_t, map_ll_bursty2_t, rnn_ll_bursty2_t = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
+                                                                  radar_noise_power = 10, is_compute_map=True,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False, is_t = True)
+
+    map_ll_non_bursty2, rnn_ll_non_bursty2, map_ll_bursty2, rnn_ll_bursty2 = interpret_2.likelihood(bit_pos_list=[radar_bit_pos],sigma = 1.0,
+                                                                  radar_noise_power = 10, is_compute_map=True,
+                                                                  is_compute_no_bursty=True,
+                                                                  is_same_code = True, is_all_zero = False, is_t = False)
+
+
+    map_ll_non_bursty2_t = [abs(item) for item in map_ll_non_bursty2_t]
+    rnn_ll_non_bursty2_t = [abs(item) for item in rnn_ll_non_bursty2_t]
+    map_ll_non_bursty2 = [abs(item) for item in map_ll_non_bursty2]
+    rnn_ll_non_bursty2 = [abs(item) for item in rnn_ll_non_bursty2]
+
+
+    plt.figure(1)
+    plt.title('Positional likelihood compare on different snr at sigma = 1.0 with t-dist noise')
+    plt.ylabel('abs of likelihood')
+    plt.xlabel('code block position')
+
+    p1, = plt.plot(map_ll_non_bursty2_t, 'k', label ='Map T sigma 1.0')
+    p2, = plt.plot(rnn_ll_non_bursty2_t, 'y', label ='RNN T sigma 1.0')
+    p3, = plt.plot(map_ll_non_bursty2, 'k-*', label ='Map AWGN sigma 1.0')
+    p4, = plt.plot(rnn_ll_non_bursty2, 'y-*', label ='RNN AWGN sigma 1.0')
+    plt.grid()
+    plt.legend(handles = [p1, p2, p3, p4])
+
+    # plt.figure(2)
+    # plt.title('likelihood compare on different snr at sigma = 1.0 with t-dist noise with all zero')
+    # p1, = plt.plot(map_ll_bursty2_t, 'k', label ='Map T sigma 1.0')
+    # p2, = plt.plot(rnn_ll_bursty2_t, 'y', label ='RNN T sigma 1.0')
+    # p3, = plt.plot(map_ll_bursty2, 'k-*', label ='Map AWGN sigma 1.0')
+    # p4, = plt.plot(rnn_ll_bursty2, 'y-*', label ='RNN AWGN sigma 1.0')
+    # plt.grid()
+    # plt.legend(handles = [p1, p2, p3, p4])
+
+
+
+    plt.show()
+
+def t_ber_for_paper():
+    print '[Interpret] Comparing between different RNN models'
+    ###############################################
+    # Input Parameters
+    ###############################################
+    network_saved_path_2 = './model_zoo/awgn_len100_end2end/awgn_bl100_1014.h5'
+
+    radar_bit_pos = 50
+    num_block = 50000
+
+    print 'num_block', num_block
+    '1.18850222744'
+
+    interpret_2  = Interpret(network_saved_path=network_saved_path_2, block_len=100, num_block=num_block)
+    map_ber_non_bursty_t, rnn_ber_non_bursty_t = interpret_2.ber(bit_pos_list=[radar_bit_pos], sigma=1.0,
+                                                                              radar_noise_power = 10, is_compute_map=True,
+                                                                              is_compute_no_bursty=True,is_compute_bursty = False ,
+                                                                              is_t=True)
+
+    map_ber_non_bursty, rnn_ber_non_bursty    = interpret_2.ber(bit_pos_list=[radar_bit_pos], sigma=1.0,
+                                                                              radar_noise_power = 10, is_compute_map=True,
+                                                                              is_compute_no_bursty=True,is_compute_bursty = False ,
+                                                                              is_t=False)
+
+
+    print 'map_ber_non_bursty_t', map_ber_non_bursty_t
+    print 'rnn_ber_non_bursty_t', rnn_ber_non_bursty_t
+    print 'map_ber_non_bursty',map_ber_non_bursty
+    print 'rnn_ber_non_bursty',rnn_ber_non_bursty
+
+    plt.figure(1)
+    plt.title('Compare BER non bursty on T-dist and AWGN at -1.5dB')
+    plt.xlabel('Position')
+    p1, = plt.plot(map_ber_non_bursty_t, 'b--', label ='Turbo T dist' )
+    p2, = plt.plot(rnn_ber_non_bursty_t, 'g--', label =  'RNN T dist')
+    p3, = plt.plot(map_ber_non_bursty,     'b', label ='Turbo AWGN')
+    p4, = plt.plot(rnn_ber_non_bursty,     'g', label ='RNN AWGN')
+
+    plt.legend(handles = [p1,p2,  p3,p4])
+    plt.show()
+
+    # plt.figure(2)
+    # plt.xlabel('Position')
+    # plt.title('Compare BER between RNN/Turbo\n over Turbo' + label1+label2+label3 + 'RNN')
+    # plt.yscale('log')
+    # p1, = plt.plot(map_ber_non_bursty1, 'b-*', label ='Turbo Non Bursty' )
+    # p2, = plt.plot(rnn_ber_non_bursty1, 'g-*', label =label1 + 'RNN Non Bursty')
+    # p3, = plt.plot(map_ber_bursty1,     'b', label ='Turbo Bursty')
+    # p4, = plt.plot(rnn_ber_bursty1,     'g', label =label1 + 'RNN Bursty')
+    #
+    # p5, = plt.plot(rnn_ber_non_bursty2, 'y-*', label =label2 + 'RNN Non Bursty')
+    # p6, = plt.plot(rnn_ber_bursty2,     'y', label =label2 + 'RNN Bursty')
+    # p7, = plt.plot(rnn_ber_non_bursty3, 'k-*', label =label3 + 'RNN Non Bursty')
+    # p8, = plt.plot(rnn_ber_bursty3,     'k', label =label3 + 'RNN Bursty')
+    #
+    # plt.legend(handles = [p1, p3,p4, p2, p5, p6, p7, p8])
+    #plt.show()
 
 
 if __name__ == '__main__':
     # User Case 1, likelihood on bursty noise and AWGN only. Compare RNN and BCJR's output.
-    likelihood_snr_range()
+    #likelihood_snr_range()
 
     # User Case 2, likelihood on RNN models. Compare the output scale.
     #likelihood_radartrained_vs_awgntrained()
@@ -917,6 +1120,15 @@ if __name__ == '__main__':
 
     # User Case 5
     #likelihood_model_compare()
+
+    # for paper
+    #ber_bursty_only_compare()
+
+    #likelihood_snr_range()
+
+
+    t_dist_for_paper()
+    #t_ber_for_paper()
 
 
 

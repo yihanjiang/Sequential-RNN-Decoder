@@ -117,6 +117,21 @@ if __name__ == '__main__':
         print '[Setting Parameters] Using Thresholding Denoise with denoise threshold', denoise_thd
         print '[Setting Parameters] Noise Type is ', noise_type, 'with Radar Power ', radar_power, ' with Radar Probability ', radar_prob
 
+    elif noise_type == 'mix_snr_turbo' or noise_type == 'random_snr_turbo':
+        if '-mix_snr' in n_inp:
+            ind1 = n_inp.index('-mix_snr')
+            snr_0 = float(n_inp[ind1+1])
+            snr_1  = float(n_inp[ind1+2])
+            snr_2  = float(n_inp[ind1+3])
+        else:
+            snr_0  = -1.0
+            snr_1  = 0.0
+            snr_2  = 1.0
+        snr_mix = [snr_0, snr_1, snr_2]
+
+        print '[Warning] mixing snr in different bit with snr 0, 1, 2', snr_mix, 'converting from dB to sigma'
+        from utils import snr_db2sigma
+        snr_mix = [snr_db2sigma(item) for item in snr_mix]
 
     if '-snr_range' in n_inp:
         ind1      = n_inp.index('-snr_range')
@@ -248,7 +263,7 @@ if __name__ == '__main__':
 
     for idx in xrange(SNR_points):
         start_time = time.time()
-        noiser = [noise_type, test_sigmas[idx], vv, radar_power, radar_prob, denoise_thd]
+        noiser = [noise_type, test_sigmas[idx], vv, radar_power, radar_prob, denoise_thd, snr_mix]
 
         X_feed_test, X_message_test = build_rnn_data_feed(num_block, block_len, noiser, codec)
         pd       = model.predict(X_feed_test,batch_size = 100)

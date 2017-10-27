@@ -304,6 +304,7 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     #     x2 = Lambda(takeLL)(x2_temp)
     #     return x2
 
+    print inputs.get_shape()
 
     x_input_1 = Lambda(split_data_1, name = 'split_data_normal')(inputs) # sys, par1
     x_input_2 = Lambda(split_data_2, name = 'split_data_interleave')(inputs) # sys_i, par2

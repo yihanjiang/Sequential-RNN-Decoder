@@ -47,7 +47,7 @@ if __name__ == '__main__':
         ind1      = n_inp.index('-block_len')
         block_len = int(n_inp[ind1+1])
     else:
-        block_len = 1000
+        block_len = 100
     print '[Setting Parameters] Code Block Length is ', block_len
 
     if '-num_block_train' in n_inp:
@@ -81,6 +81,7 @@ if __name__ == '__main__':
     vv          = -1.0
     radar_power = -1.0
     radar_prob  = -1.0
+    snr_mix     = []
 
     if noise_type == 'awgn':
         print '[Setting Parameters] Noise Type is ', noise_type
@@ -107,6 +108,39 @@ if __name__ == '__main__':
             radar_prob   = 5e-2
 
         print '[Setting Parameters] Noise Type is ', noise_type, 'with Radar Power ', radar_power, ' with Radar Probability ', radar_prob
+
+    elif noise_type == 'mix_snr_turbo':
+        if '-mix_snr' in n_inp:
+            ind1 = n_inp.index('-mix_snr')
+            snr_0 = float(n_inp[ind1+1])
+            snr_1  = float(n_inp[ind1+2])
+            snr_2  = float(n_inp[ind1+3])
+        else:
+            snr_0  = 0.0
+            snr_1  = 2.0
+            snr_2  = 4.0
+        snr_mix = [snr_0, snr_1, snr_2]
+
+        print '[Warning] mixing snr in different bit with snr 0, 1, 2', snr_mix
+        from utils import snr_db2sigma
+        snr_mix = [snr_db2sigma(item) for item in snr_mix]
+
+    elif noise_type == 'mix_snr_turbo' or noise_type == 'random_snr_turbo':
+        if '-mix_snr' in n_inp:
+            ind1 = n_inp.index('-mix_snr')
+            snr_0 = float(n_inp[ind1+1])
+            snr_1  = float(n_inp[ind1+2])
+            snr_2  = float(n_inp[ind1+3])
+        else:
+            snr_0  = -1.0
+            snr_1  = 0.0
+            snr_2  = 1.0
+        snr_mix = [snr_0, snr_1, snr_2]
+
+        print '[Warning] mixing snr in different bit with snr 0, 1, 2', snr_mix, 'converting from dB to sigma'
+        from utils import snr_db2sigma
+        snr_mix = [snr_db2sigma(item) for item in snr_mix]
+
 
     if '-train_snr' in n_inp:
         ind1      = n_inp.index('-train_snr')
@@ -234,7 +268,7 @@ if __name__ == '__main__':
     sigma_snr  = np.sqrt(1/(2*10**(float(train_snr_Es)/float(10))))
     SNR = -10*np.log10(sigma_snr**2)
 
-    noiser = [noise_type, sigma_snr, vv, radar_power, radar_prob]
+    noiser = [noise_type, sigma_snr, vv, radar_power, radar_prob, 10000.0 , snr_mix]
     start_time = time.time()
 
     X_feed_test, X_message_test = build_rnn_data_feed(num_block_test,  block_len, noiser, codec)

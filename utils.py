@@ -36,7 +36,7 @@ Use Corrupt_signal, generate_noise is depreciated.
 '''
 def corrupt_signal(input_signal, noise_type, sigma = 1.0,
                     vv =5.0, radar_power = 20.0, radar_prob = 5e-2, denoise_thd = 10.0,
-                    modulate_mode = 'bpsk'):
+                    modulate_mode = 'bpsk', snr_mixture = [0, 0, 0]):
     '''
     Documentation TBD.
     only bpsk is allowed, but other modulation is allowed by user-specified modulation.
@@ -159,6 +159,15 @@ def corrupt_signal(input_signal, noise_type, sigma = 1.0,
 
         return corrupted_signal
 
+    elif noise_type == 'mix_snr_turbo':
+        noise = snr_mixture[0] * np.random.standard_normal(data_shape) # Define noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
+
+    elif noise_type == 'random_snr_turbo':
+        this_snr = np.random.uniform(snr_mixture[2],snr_mixture[0], data_shape)
+        noise = np.multiply(this_snr, np.random.standard_normal(data_shape)) # Define noise
+        corrupted_signal = 2.0*input_signal-1.0 + noise
+
     else:
         print '[Warning][Noise Generator]noise_type noty specified!'
         noise = sigma * np.random.standard_normal(data_shape)
@@ -217,6 +226,7 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
     radar_power = 20.0
     radar_prob  = 5e-2
     denoise_thd = 10.0
+    snr_mix     = [0, 0, 0]
 
     if noise_type == 't-dist':
         vv = noiser[2]
@@ -228,6 +238,9 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
         radar_power = noiser[3]
         radar_prob  = noiser[4]
         denoise_thd = noiser[5]
+
+    elif noise_type == 'mix_snr_turbo' or noise_type == 'random_snr_turbo':
+        snr_mix = noiser[6]
 
     elif noise_type == 'customize':
         '''
@@ -244,6 +257,8 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
     trellis1    = codec[0]
     trellis2    = codec[1]
     interleaver = codec[2]
+
+
     p_array     = interleaver.p_array
 
     X_feed = []
@@ -264,12 +279,14 @@ def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False
         [sys, par1, par2] = turbo.turbo_encode(message_bits, trellis1, trellis2, interleaver)
 
         sys_r  = corrupt_signal(sys, noise_type =noise_type, sigma = noise_sigma,
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd,
+                               snr_mixture = snr_mix)
         par1_r = corrupt_signal(par1, noise_type =noise_type, sigma = noise_sigma,
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd,
+                               snr_mixture = snr_mix)
         par2_r = corrupt_signal(par2, noise_type =noise_type, sigma = noise_sigma,
-                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd)
-
+                               vv =vv, radar_power = radar_power, radar_prob = radar_prob, denoise_thd = denoise_thd,
+                               snr_mixture = snr_mix)
 
         rnn_feed_raw = np.stack([sys_r, par1_r, np.zeros(sys_r.shape), intleave(sys_r, p_array), par2_r], axis = 0).T
         rnn_feed = rnn_feed_raw
