@@ -1,6 +1,6 @@
-__author__ = 'yihanjiang'
 import time
 import numpy as np
+import math
 import commpy.channelcoding.turbo as turbo
 from utils import corrupt_signal, snr_db2sigma
 
@@ -8,15 +8,14 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
                           **kwargs ):
     '''
     Generate BCJR feature and target for training BCJR-like RNN codec from scratch
-    :param snr:
-    :return:
     '''
+
     start_time = time.time()
     # print
     print '[BCJR] Block Length is ', block_len
     print '[BCJR] Number of Block is ', num_block
 
-    code_rate   =  3
+    input_feature_num = 3
     noise_type  = 'awgn'
     noise_sigma = snr_db2sigma(train_snr_db)
 
@@ -28,7 +27,7 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
     interleaver = codec[2]
 
     # Initialize BCJR input/output Pair for training (Is that necessary?)
-    bcjr_inputs  = np.zeros([2*num_iteration, num_block, block_len ,code_rate])
+    bcjr_inputs  = np.zeros([2*num_iteration, num_block, block_len ,input_feature_num])
     bcjr_outputs = np.zeros([2*num_iteration, num_block, block_len ,1        ])
 
     for block_idx in range(num_block):
@@ -39,13 +38,6 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
         sys_r  = corrupt_signal(sys, noise_type =noise_type, sigma = noise_sigma,)
         par1_r = corrupt_signal(par1, noise_type =noise_type, sigma = noise_sigma)
         par2_r = corrupt_signal(par2, noise_type =noise_type, sigma = noise_sigma)
-
-        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = sys.shape)
-        # sys_r = (2.0*sys-1) + noise # Modulation plus noise
-        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par1.shape)
-        # par1_r = (2.0*par1-1) + noise # Modulation plus noise
-        # noise = generate_noise(noise_type =noise_type, sigma = noise_sigma, data_shape = par2.shape)
-        # par2_r = (2.0*par2-1) + noise # Modulation plus noise
 
         # Use the Commpy BCJR decoding algorithm
         sys_symbols = sys_r
@@ -127,17 +119,17 @@ def generate_bcjr_example(num_block, block_len, codec, num_iteration, is_save = 
     print '[BCJR] Generating Training Example takes ', end_time - start_time , 'secs'
     print '[BCJR] file id is', identity
 
-    # Save to pickle file
-    if is_save:
-        print '[BCJR] Dumping Generated Example to file'
-        import pickle
-        with open('./tmp/bcjr_trEX_'+str(identity)+'_SNRidx_'+str(train_snr_db)+'_BL_'+str(block_len)+'_BN_'+str(num_iteration)+'.pickle', 'w') as f:  # Python 3: open(..., 'wb')
-            pickle.dump([bcjr_outputs, bcjr_inputs, num_iteration, block_len], f)
+    bcjr_inputs_train   = bcjr_inputs.reshape((-1, block_len,input_feature_num ))
+    bcjr_outputs_train  = bcjr_outputs.reshape((-1,  block_len, 1))
 
-        return bcjr_inputs, bcjr_outputs
+    target_train_select = bcjr_outputs_train[:,:,0] + bcjr_inputs_train[:,:,2]
 
-    else:
-        return bcjr_inputs, bcjr_outputs
+    target_train_select[:,:] = math.e**target_train_select[:,:]*1.0/(1+math.e**target_train_select[:,:])
+
+    X_input  = bcjr_inputs_train.reshape(-1,block_len,input_feature_num)
+    X_target = target_train_select.reshape(-1,block_len,1)
+
+    return X_input, X_target
 
 
 if __name__ == '__main__':

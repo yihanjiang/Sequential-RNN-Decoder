@@ -10,6 +10,9 @@ import math
 import commpy.channelcoding.turbo as turbo
 
 from scipy import stats
+import keras.backend as K
+import tensorflow as tf
+
 #######################################
 # Interleaving Helper Functions
 #######################################
@@ -205,7 +208,7 @@ def generate_noise(noise_type, sigma, data_shape, vv =5.0, radar_power = 20.0, r
     return noise
 
 #######################################
-# Build RNN Feed Helper Function
+# Build RNN Feed Helper Function (for Turbo Code only, need to refactor)
 #######################################
 
 def build_rnn_data_feed(num_block, block_len, noiser, codec, is_all_zero = False ,is_same_code = False, **kwargs):
@@ -313,6 +316,67 @@ def snr_db2sigma(train_snr):
 def snr_sigma2db(sigma_snr):
     SNR          = -10*np.log10(sigma_snr**2)
     return SNR
+
+def get_test_sigmas(snr_start, snr_end, snr_points):
+    SNR_dB_start_Eb = snr_start
+    SNR_dB_stop_Eb = snr_end
+    SNR_points = snr_points
+
+    snr_interval = (SNR_dB_stop_Eb - SNR_dB_start_Eb)* 1.0 /  (SNR_points-1)
+    SNRS_dB = [snr_interval* item + SNR_dB_start_Eb for item in range(SNR_points)]
+    SNRS_dB_Es = [item + 10*np.log10(1.0/2.0) for item in SNRS_dB]
+    test_sigmas = np.array([np.sqrt(1/(2*10**(float(item)/float(10)))) for item in SNRS_dB_Es])
+
+    SNRS = SNRS_dB
+    print '[testing] SNR range in dB ', SNRS
+
+    return SNRS, test_sigmas
+
+def code_err(y_true, y_pred):
+    '''
+    I want the 'sharpened' y_pred to be as close as BPSK codes.
+    :param y_true:
+    :param y_pred:
+    :return:
+    '''
+    x = y_pred
+    x = (100000.0 * x) + 0.0
+    x = K.clip(x, 0.0, 1.0)
+    x = 2*x - 1
+
+    myOtherTensor = K.not_equal(y_true, K.round(x))
+    return K.mean(tf.cast(myOtherTensor, tf.float32))
+
+
+def errors(y_true, y_pred):
+    myOtherTensor = K.not_equal(y_true, K.round(y_pred))
+    return K.mean(tf.cast(myOtherTensor, tf.float32))
+
+def conv_enc(X_train_raw, args):
+
+    import commpy.channelcoding.convcode as cc
+    num_block = X_train_raw.shape[0]
+    block_len = X_train_raw.shape[1]
+    x_code    = []
+
+    M = np.array([2]) # Number of delay elements in the convolutional encoder
+    if args.code_rate == 2:
+        generator_matrix = np.array([[args.enc1, args.enc2]])
+    elif args.code_rate == 3:
+        generator_matrix = np.array([[args.enc1, args.enc2, args.enc3]])
+    feedback = args.feedback
+
+    trellis = cc.Trellis(M, generator_matrix,feedback=feedback)# Create trellis data structure
+
+    for idx in range(num_block):
+        xx = cc.conv_encode(X_train_raw[idx, :, 0], trellis)
+        xx = xx[2*int(M):]
+        xx = xx.reshape((block_len, 2))
+
+        x_code.append(xx)
+
+    return np.array(x_code)
+
 
 
 

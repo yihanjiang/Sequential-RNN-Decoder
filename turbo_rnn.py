@@ -182,9 +182,6 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
                last_layer_sigmoid = True, loss= 'mean_squared_error',
                **kwargs):
 
-    print '[RNN Model] Testing on Losses'
-    print '[Warining] loss is', loss
-
     if network_saved_path == 'default':
         network_saved_path = './model_zoo/awgn_model_end2end/yihan_clean_ttbl_0.870905022927_snr_3.h5'
     else:
@@ -303,8 +300,6 @@ def load_model(interleave_array, dec_iter_num = 6,block_len = 1000,  network_sav
     #     x2_temp = Lambda(concat)([x2_out, x2])
     #     x2 = Lambda(takeLL)(x2_temp)
     #     return x2
-
-    print inputs.get_shape()
 
     x_input_1 = Lambda(split_data_1, name = 'split_data_normal')(inputs) # sys, par1
     x_input_2 = Lambda(split_data_2, name = 'split_data_interleave')(inputs) # sys_i, par2
