@@ -436,8 +436,8 @@ def _acs_traceback(r_codeword, trellis, decoding_type,
             else:
                 pass
 
-            print("branch_metric: ")
-            print(branch_metric)
+            # print("branch_metric: ")
+            # print(branch_metric)
             # ADD operation: Add the branch metric to the
             # accumulated path metric and store it in the temporary array
             pmetrics[i] = path_metrics[previous_state, 0] + branch_metric
@@ -559,16 +559,16 @@ def viterbi_decode(coded_bits, trellis, tb_depth=None, decoding_type='hard'):
         #print('before: ')
         #print decoded_symbols
 
-        print('t: ')
-        print(t)
-        print(' r_codeword: ')
-        print(r_codeword)
+        # print('t: ')
+        # print(t)
+        # print(' r_codeword: ')
+        # print(r_codeword)
         _acs_traceback(r_codeword, trellis, decoding_type, path_metrics, paths,
                 decoded_symbols, decoded_bits, tb_count, t, count, tb_depth,
                 current_number_states)
 
-        print 'paths: '
-        print paths
+        # print 'paths: '
+        # print paths
 
         
         if t >= tb_depth - 1:
@@ -579,13 +579,13 @@ def viterbi_decode(coded_bits, trellis, tb_depth=None, decoding_type='hard'):
         
         # Path metrics (at t-1) = Path metrics (at t)
         path_metrics[:, 0] = path_metrics[:, 1]
-        print('path metrics: ')
-        print path_metrics
+        # print('path metrics: ')
+        # print path_metrics
 
         # Force all the paths back to '0' state at the end of decoding
         if t == (L+total_memory+total_memory%k)/k:
             current_number_states = 1
 
-        print ('decoded_bits: ')
-        print decoded_bits
+        # print ('decoded_bits: ')
+        # print decoded_bits
     return decoded_bits[0:len(decoded_bits)-tb_depth-1]
