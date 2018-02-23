@@ -23,15 +23,21 @@ Use pip to install above packages.
 (2) Train BCJR-like
 
 # Neural Turbo Decoder
+Currently debugging non-AWGN decoders. AWGN decoders works well.
+
 (1) To evaluate Neural Turbo Decoder run default setting by:
+python turbo_neural_decoder_eval.py -h, to sepecify the parameters for testing.
 
-python turbo_neural_decoder_eval.py 
+(2) To train Neural Turbo Decoder:
+python turbo_neural_decoder_train.py -h, to specify the parameters for training
 
-To train Neural Turbo Decoder
+# Interpreting the RNN
+Under construction.
 
 
-To train Neural Turbo Decoder 
-
+# Benchmarks
+We have benchmarks for evaluating BER/BLER for convolutional code, turbo code. 
+LDPC/Polar code under construction.
 
 We have a few scripts for user: 
 
@@ -43,7 +49,8 @@ We have a few scripts for user:
 (7) TBD: Support User Defined Codec.\
 (8) TBD: User Defined Channel, or let user override channel easily.
  
-
+# Questions?
+Please email Yihan Jiang (yij021@uw.edu) for code questions.
 
 Organization of codes:\
 (1) bcjr_util.py and utils.py:  Plan to merge. Utility Helpful Functions. \
