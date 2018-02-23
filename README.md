@@ -1,5 +1,4 @@
 ## Sequential-RNN-Decoder
-**RNN Turbo Decoder**
 Updated: 02/22/2018
 
 This repository contains source code necessary to reproduce the results presented in the following paper:
