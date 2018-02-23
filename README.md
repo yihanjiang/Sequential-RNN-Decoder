@@ -48,12 +48,13 @@ We have a few scripts for user:
 (7) TBD: Support User Defined Codec.\
 (8) TBD: User Defined Channel, or let user override channel easily.
  
-# Questions?
-Please email Yihan Jiang (yij021@uw.edu) for code questions.
 
-Organization of codes:\
+# Organization of codes
 (1) bcjr_util.py and utils.py:  Plan to merge. Utility Helpful Functions. \
 (2) turbo_RNN.py: Stacked Turbo RNN decoder. Plan to add TurboRNN Layer for further usage.\
 (3) model_zoo: trained models. \
 (4) commpy: Python Channel Codec.\
 (5) interface: usage for customized channel/decoder, etc.
+
+# Questions?
+Please email Yihan Jiang (yij021@uw.edu) for any questions.
