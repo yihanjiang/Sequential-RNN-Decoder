@@ -14,7 +14,25 @@ Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMb
 (5) tensorflow (1.2+)\
 Use pip to install above packages.
 
-# Scripts
+# RNN for Convolutioanl Code 
+(1)
+
+
+
+
+(2) Train BCJR-like
+
+# Neural Turbo Decoder
+(1) To evaluate Neural Turbo Decoder run default setting by:
+
+python turbo_neural_decoder_eval.py 
+
+To train Neural Turbo Decoder
+
+
+To train Neural Turbo Decoder 
+
+
 We have a few scripts for user: 
 
 (1) **evaluate_rnn.py** is a command line tool for evaluating Turbo RNN Decoder's BER curve.\
