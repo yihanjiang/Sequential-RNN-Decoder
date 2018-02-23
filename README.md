@@ -1,8 +1,9 @@
 # TurboRNNDecoder
 **RNN Turbo Decoder**
-Author: Yihan Jiang, UW & Hyeji Kim, UIUC.
+Updated: 02/22/2018
 
-Updated: 09/19/2017
+This repository contains source code necessary to reproduce the results presented in the following paper:
+Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMbR-) by Hyeji Kim, Yihan Jiang, Ranvir B. Rana, Sreeram Kannan, Sewoong Oh, Pramod Viswanath, accepted to ICLR 2018 as poster.
 
 We have a few scripts for user: 
 
