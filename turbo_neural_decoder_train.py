@@ -26,8 +26,6 @@ def get_args():
     parser.add_argument('-feedback',  type=int, default=7)
     parser.add_argument('-M',  type=int, default=2, help="Number of delay elements in the convolutional encoder")
 
-    parser.add_argument('-num_cpu', type=int, default=4)
-
     parser.add_argument('-snr_test_start', type=float, default=-1.5)
     parser.add_argument('-snr_test_end', type=float, default=2.0)
     parser.add_argument('-snr_points', type=int, default=8)
