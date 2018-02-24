@@ -8,7 +8,7 @@ Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMb
 - Python (2.7.10+)
 - numpy (1.14.1)
 - Keras (2.0)
-- scikit-commpy (0.3.0) For Commpy, we use a modified version of the original commpy, which is in the folder with name commpy. Commpy will be depreciated for future versions.
+- scikit-commpy (0.3.0) For Commpy, we use a modified version of the original commpy, which is in the folder with name commpy. You don't need to install commpy via pip. The original commpy has a few bugs which is fixed in our version.
 - h5py (2.7.0)
 - tensorflow (1.5)
 
@@ -42,7 +42,9 @@ Note: Currently debugging non-AWGN decoders. Recommend to run on GPU.
 
 - To evaluate Neural Turbo Decoder run default setting by:
 python turbo_neural_decoder_eval.py -h, to sepecify the parameters for testing. 
-    
+
+
+
 - To train Neural Turbo Decoder:
 python turbo_neural_decoder_train.py -h, to specify the parameters for training
 

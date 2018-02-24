@@ -26,7 +26,7 @@ def get_args():
     parser.add_argument('-snr_test_end', type=float, default=2.0)
     parser.add_argument('-snr_points', type=int, default=8)
 
-    parser.add_argument('-model_path', type=str, default='./models/turbo_models/yihan_clean_ttbl_0.870905022927_snr_3.h5')
+    parser.add_argument('-model_path', type=str, default='./models/turbo_models/awgn_bl100_1014.h5')
 
     parser.add_argument('-rnn_type', choices = ['lstm', 'gru'], default = 'lstm')
     parser.add_argument('-rnn_direction', choices = ['bd', 'sd'], default = 'bd')
