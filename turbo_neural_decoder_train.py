@@ -26,11 +26,7 @@ def get_args():
     parser.add_argument('-feedback',  type=int, default=7)
     parser.add_argument('-M',  type=int, default=2, help="Number of delay elements in the convolutional encoder")
 
-    parser.add_argument('-snr_test_start', type=float, default=-1.5)
-    parser.add_argument('-snr_test_end', type=float, default=2.0)
-    parser.add_argument('-snr_points', type=int, default=8)
-
-    parser.add_argument('-init_nw_model', type=str, default='./models/turbo_models/yihan_clean_ttbl_0.870905022927_snr_3.h5')
+    parser.add_argument('-init_nw_model', type=str, default='./models/turbo_models/awgn_bl100_1014.h5')
 
     parser.add_argument('-rnn_type', choices = ['lstm', 'gru'], default = 'lstm')
     parser.add_argument('-rnn_direction', choices = ['bd', 'sd'], default = 'bd')
@@ -40,7 +36,6 @@ def get_args():
     parser.add_argument('-batch_size',  type=int, default=10)
     parser.add_argument('-learning_rate',  type=float, default=0.001)
     parser.add_argument('-num_epoch',  type=int, default=20)
-
 
     parser.add_argument('-noise_type', choices = ['awgn', 't-dist','hyeji_bursty'], default='awgn')
     parser.add_argument('-train_snr', type=float, default=-1.0)
