@@ -5,13 +5,12 @@ This repository contains source code necessary to reproduce the results presente
 Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMbR-) by Hyeji Kim, Yihan Jiang, Ranvir B. Rana, Sreeram Kannan, Sewoong Oh, Pramod Viswanath, accepted to ICLR 2018 as poster.
 
 ## Dependency
-(0) Python (2.7.10+)\
-(1) numpy (1.14.1+)\
-(2) Keras (2.0+)\
-(3) scikit-commpy (0.3.0) For Commpy, we use a modified version of the original commpy, which is in the folder with name commpy. Commpy will be depreciated for future versions.\
-(4) h5py (2.7.0+)\
-(5) tensorflow (1.2+)\
-Use pip to install above packages.
+- Python (2.7.10+)
+- numpy (1.14.1)
+- Keras (2.0)
+- scikit-commpy (0.3.0) For Commpy, we use a modified version of the original commpy, which is in the folder with name commpy. Commpy will be depreciated for future versions.
+- h5py (2.7.0)
+- tensorflow (1.5)
 
 ## RNN for Convolutioanl Code 
 (1)
