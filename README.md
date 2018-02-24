@@ -22,7 +22,7 @@ Use pip to install above packages.
 (2) Train BCJR-like
 
 # Neural Turbo Decoder
-Currently debugging non-AWGN decoders. AWGN decoders works well.
+Note: Currently debugging non-AWGN decoders. AWGN decoders works well.
 
 (1) To evaluate Neural Turbo Decoder run default setting by:
 python turbo_neural_decoder_eval.py -h, to sepecify the parameters for testing. The following command will test Turbo Neural Decoder with block length 100 between -1.5dB to 2dB for each 0.5 dB (8 points) with 100 blocks. The default model is for block length 100 AWGN neural decoder. If test on block length 1000, please use
@@ -39,9 +39,23 @@ Under construction.
 
 # Benchmarks
 We have benchmarks for evaluating BER/BLER for convolutional code, turbo code. 
-LDPC/Polar code under construction.
+The curves from paper are from MATLAB simulation, the python curve is for reference. We find the python and MATLAB implementation has same performance.
+When running large number of blocks (>1000), you might need to use multiprocess to speed up simulation, change -num_cpu to the number you like.
 
-We have a few scripts for user: 
+To evaluate BER/BLER for convolutional code, by default the codec is rate 1/2 (7,5) convolutioanl code with feedback = 7. (5 means f(x) = 1 + x^2, 7 means f(x)  = 1 + x + x^2)
+
+    $ python conv_codes_benchmark.py -num_block 100 -block_len 100 -snr_test_start -1.5 -snr_test_end 2.0 -snr_points 8 -num_cpu 1
+
+To evaluate BER/BLER for turbo code, by default the codec is rate 1/2 (7,5) convolutioanl code with feedback = 7. 
+There are two good turbo codecs: 
+
+(1) G:  [[11 13]] Feedback:  11 M:  [3]
+(2) G:  [[7 5]]   Feedback:   7 M:  [2]
+
+    $ python conv_codes_benchmark.py -num_block 100 -block_len 100 -snr_test_start -1.5 -snr_test_end 2.0 -snr_points 8 -num_cpu 1
+
+
+
 
 (1) **evaluate_rnn.py** is a command line tool for evaluating Turbo RNN Decoder's BER curve.\
 (2) **evaluate_commpy.py** is a command line tool for evaluating Turbo Commpy Decoder's BER curve.\
