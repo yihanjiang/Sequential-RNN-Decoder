@@ -1,10 +1,10 @@
-## Sequential-RNN-Decoder
+# Sequential-RNN-Decoder
 Updated: 02/22/2018
 
 This repository contains source code necessary to reproduce the results presented in the following paper:
 Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMbR-) by Hyeji Kim, Yihan Jiang, Ranvir B. Rana, Sreeram Kannan, Sewoong Oh, Pramod Viswanath, accepted to ICLR 2018 as poster.
 
-# Dependency
+## Dependency
 (0) Python (2.7.10+)\
 (1) numpy (1.14.1+)\
 (2) Keras (2.0+)\
@@ -13,7 +13,7 @@ Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMb
 (5) tensorflow (1.2+)\
 Use pip to install above packages.
 
-# RNN for Convolutioanl Code 
+## RNN for Convolutioanl Code 
 (1)
 
 
@@ -33,11 +33,11 @@ python turbo_neural_decoder_eval.py -h, to sepecify the parameters for testing. 
 (2) To train Neural Turbo Decoder:
 python turbo_neural_decoder_train.py -h, to specify the parameters for training
 
-# Interpreting the RNN
+## Interpreting the RNN
 Under construction.
 
 
-# Benchmarks
+## Benchmarks
 We have benchmarks for evaluating BER/BLER for convolutional code, turbo code. 
 The curves from paper are from MATLAB simulation, the python curve is for reference. We find the python and MATLAB implementation has same performance.
 When running large number of blocks (>1000), you might need to use multiprocess to speed up simulation, change -num_cpu to the number you like.
