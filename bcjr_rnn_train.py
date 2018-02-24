@@ -26,7 +26,6 @@ from conv_decoder import build_decoder, errors
 import commpy.channelcoding.interleavers as RandInterlv
 import commpy.channelcoding.convcode as cc
 
-
 def get_args():
     import argparse
     parser = argparse.ArgumentParser()
@@ -79,6 +78,9 @@ def get_args():
     return args
 
 def test_bcjr_ber(args, model_path):
+    '''
+    under construction. ugly code available via requirement. ETA 0228.
+    '''
     pass
 
 

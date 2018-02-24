@@ -1,5 +1,3 @@
-__author__ = 'yihanjiang'
-
 from turbo_rnn import load_model
 from utils import build_rnn_data_feed, get_test_sigmas
 import tensorflow as tf
@@ -23,7 +21,6 @@ def get_args():
     parser.add_argument('-feedback',  type=int, default=7)
     parser.add_argument('-M',  type=int, default=2, help="Number of delay elements in the convolutional encoder")
 
-    parser.add_argument('-num_cpu', type=int, default=4)
 
     parser.add_argument('-snr_test_start', type=float, default=-1.5)
     parser.add_argument('-snr_test_end', type=float, default=2.0)
@@ -37,9 +34,6 @@ def get_args():
     parser.add_argument('-num_hidden_unit', type=int, default=200)
 
     parser.add_argument('-batch_size',  type=int, default=10)
-    parser.add_argument('-learning_rate',  type=float, default=0.001)
-    parser.add_argument('-num_epoch',  type=int, default=20)
-
 
     parser.add_argument('-noise_type', choices = ['awgn', 't-dist','hyeji_bursty'], default='awgn')
     parser.add_argument('-radar_power', type=float, default=20.0)
@@ -55,14 +49,10 @@ def get_args():
     return args
 
 
-
-
 if __name__ == '__main__':
     ##################################################################################################################
-    # Parse Arguments and
+    # Parse Arguments
     ##################################################################################################################
-
-
     args = get_args()
 
     if args.GPU_proportion < 1.00:
@@ -85,10 +75,6 @@ if __name__ == '__main__':
     p_array = interleaver.p_array
     print '[Convolutional Code Codec] Encoder', 'M ', M, ' Generator Matrix ', generator_matrix, ' Feedback ', feedback
     codec  = [trellis1, trellis2, interleaver]
-
-    ##########################################
-    # Systematic Bit Channel Reliability
-    ##########################################
 
     ##########################################
     # Setting Up RNN Model

@@ -1,4 +1,3 @@
-__author__ = 'yihanjiang'
 
 from utils import build_rnn_data_feed
 from turbo_rnn import load_model
@@ -76,19 +75,16 @@ if __name__ == '__main__':
 
     print '[Setting Parameters] Number of Train Block is ',    args.num_block_train, ' Test Block ', args.num_block_test
     print '[Setting Parameters] Turbo Decoding Iteration is ', args.num_dec_iteration
-
-
-    print '[Setting Parameters] Noise Type is ',            args.noise_type
-    print '[Setting Parameters] Training Data SNR is ',     args.train_snr, ' dB'
-    print '[Setting Parameters] Training Loss is ',         args.train_loss
-    print '[Setting Parameters] Network starting path is ', args.init_nw_model
+    print '[Setting Parameters] Noise Type is ',               args.noise_type
+    print '[Setting Parameters] Training Data SNR is ',        args.train_snr, ' dB'
+    print '[Setting Parameters] Training Loss is ',            args.train_loss
+    print '[Setting Parameters] Network starting path is ',    args.init_nw_model
     print '[Setting Parameters]Trained Model Weight saving path is at: ', './tmp'+args.id
-    print '[Setting Parameters]Initial learning_rate is ', args.learning_rate
-    print '[Setting Parameters]Training batch_size is ', args.batch_size
-    print '[Setting Parameters]Training num_epoch is ', args.num_epoch
-
-    print '[Setting Parameters]RNN Number of hidden unit ', args.num_hidden_unit
-    print '[Setting Parameters]RNN type is  ', args.rnn_type
+    print '[Setting Parameters]Initial learning_rate is ',     args.learning_rate
+    print '[Setting Parameters]Training batch_size is ',       args.batch_size
+    print '[Setting Parameters]Training num_epoch is ',        args.num_epoch
+    print '[Setting Parameters]RNN Number of hidden unit ',    args.num_hidden_unit
+    print '[Setting Parameters]RNN type is  ',                 args.rnn_type
 
 
     M = np.array([args.M])
@@ -134,7 +130,6 @@ if __name__ == '__main__':
 
 
     model.fit(x=X_feed_train, y=X_message_train, batch_size=args.batch_size,
-              #callbacks=[change_lr],
               epochs=args.num_epoch, validation_data=(X_feed_test, X_message_test))  # starts training
 
 

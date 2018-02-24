@@ -12,30 +12,6 @@ Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMb
 - h5py (2.7.0)
 - tensorflow (1.5)
 
-## RNN for Convolutioanl Code 
-(1)
-
-
-
-
-(2) Train BCJR-like
-
-## Neural Turbo Decoder
-Note: Currently debugging non-AWGN decoders. AWGN decoders works well.
-
-- To evaluate Neural Turbo Decoder run default setting by:
-python turbo_neural_decoder_eval.py -h, to sepecify the parameters for testing. The following command will test Turbo Neural Decoder with block length 100 between -1.5dB to 2dB for each 0.5 dB (8 points) with 100 blocks. The default model is for block length 100 AWGN neural decoder. If test on block length 1000, please use
-
-    $ python turbo_neural_decoder_eval.py -num_block 100 -block_len 100 \
-    -snr_test_start -1.5 -snr_test_end 2.0 -snr_points 8 -model_path ./models/turbo_models/awgn_bl100_1014.h5
-
-- To train Neural Turbo Decoder:
-python turbo_neural_decoder_train.py -h, to specify the parameters for training
-
-## Interpreting the RNN
-Under construction.
-
-
 ## Benchmarks
 We have benchmarks for evaluating BER/BLER for convolutional code, turbo code. 
 The curves from paper are from MATLAB simulation, the python curve is for reference. We find the python and MATLAB implementation has same performance.
@@ -55,6 +31,25 @@ You can change to LTE turbo codec by
     
 By default the number of decoding iteration is 6, you can change via change argument '-num_dec_iteration'
 
+
+## RNN for Convolutioanl Code 
+- use conv_decoder.py to train Viterbi-like RNNs. 
+ 
+- use bcjr_rnn_train.py to train BCJR-like RNNs. 
+
+## Neural Turbo Decoder
+Note: Currently debugging non-AWGN decoders. Recommend to run on GPU. 
+
+- To evaluate Neural Turbo Decoder run default setting by:
+python turbo_neural_decoder_eval.py -h, to sepecify the parameters for testing. 
+    
+- To train Neural Turbo Decoder:
+python turbo_neural_decoder_train.py -h, to specify the parameters for training
+
+## Interpreting the RNN
+Under construction.
+
+
 <!--## Organization of codes-->
 <!--(1) bcjr_util.py and utils.py:  Plan to merge. Utility Helpful Functions. \-->
 <!--(2) turbo_RNN.py: Stacked Turbo RNN decoder. Plan to add TurboRNN Layer for further usage.\-->
@@ -62,5 +57,5 @@ By default the number of decoding iteration is 6, you can change via change argu
 <!--(4) commpy: Python Channel Codec.\-->
 <!--(5) interface: usage for customized channel/decoder, etc.-->
 
-# Questions?
+## Questions?
 Please email Yihan Jiang (yij021@uw.edu) for any questions.

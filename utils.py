@@ -178,6 +178,8 @@ def corrupt_signal(input_signal, noise_type, sigma = 1.0,
 
     return corrupted_signal
 
+
+# deprecated
 def generate_noise(noise_type, sigma, data_shape, vv =5.0, radar_power = 20.0, radar_prob = 5e-2):
     '''
     Documentation TBD.
@@ -346,7 +348,6 @@ def code_err(y_true, y_pred):
 
     myOtherTensor = K.not_equal(y_true, K.round(x))
     return K.mean(tf.cast(myOtherTensor, tf.float32))
-
 
 def errors(y_true, y_pred):
     myOtherTensor = K.not_equal(y_true, K.round(y_pred))
