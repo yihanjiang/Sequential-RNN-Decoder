@@ -47,24 +47,14 @@ To evaluate BER/BLER for convolutional code, by default the codec is rate 1/2 (7
     $ python conv_codes_benchmark.py -num_block 100 -block_len 100 -snr_test_start -1.5 -snr_test_end 2.0 -snr_points 8 -num_cpu 1
 
 To evaluate BER/BLER for turbo code, by default the codec is rate 1/2 (7,5) convolutioanl code with feedback = 7. 
-There are two good turbo codecs: 
 
-(1) G:  [[11 13]] Feedback:  11 M:  [3]
-(2) G:  [[7 5]]   Feedback:   7 M:  [2]
+    $ python turbo_codes_benchmark.py -num_block 100 -block_len 100 -snr_test_start -1.5 -snr_test_end 2.0 -snr_points 8 -num_cpu 1
 
-    $ python conv_codes_benchmark.py -num_block 100 -block_len 100 -snr_test_start -1.5 -snr_test_end 2.0 -snr_points 8 -num_cpu 1
+You can change to LTE turbo codec by
 
-
-
-
-(1) **evaluate_rnn.py** is a command line tool for evaluating Turbo RNN Decoder's BER curve.\
-(2) **evaluate_commpy.py** is a command line tool for evaluating Turbo Commpy Decoder's BER curve.\
-(3) **train_turbo_decoder_end2end.py** is a command line tool for training Turbo Decoder with different noise.\
-(4) **train_bcjr_rnn.py** is a command line tool for training BCJR-like RNN.\
-(5) **interpret.py** shows how to duplicate interpretable graph in paper.\
-(7) TBD: Support User Defined Codec.\
-(8) TBD: User Defined Channel, or let user override channel easily.
- 
+    $ python turbo_codes_benchmark.py -enc1 11 -enc2 13 -M 3 -feedback 11 -num_block 100 -block_len 100 -snr_test_start -1.5 -snr_test_end 2.0 -snr_points 8 -num_cpu 1
+    
+By default the number of decoding iteration is 6, you can change via change argument '-num_dec_iteration'
 
 # Organization of codes
 (1) bcjr_util.py and utils.py:  Plan to merge. Utility Helpful Functions. \
