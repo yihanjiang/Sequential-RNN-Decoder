@@ -1,5 +1,5 @@
 # Sequential-RNN-Decoder
-Updated: 02/23/2018, still under construction. ETA 03/02 to finish.
+Updated: 05/02/2018, PyTorch version under construction. Later will all merge to PyTorch.
 
 This repository contains source code necessary to reproduce the results presented in the following paper:
 Communication Algorithms via Deep Learning(https://openreview.net/pdf?id=ryazCMbR-) by Hyeji Kim, Yihan Jiang, Ranvir B. Rana, Sreeram Kannan, Sewoong Oh, Pramod Viswanath, accepted to ICLR 2018 as poster.
